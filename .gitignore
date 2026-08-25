@@ -1,0 +1,9 @@
+target/
+out/
+out-verificacion/
+verificacion-*/
+work/
+work-m2/
+uploads/
+*.class
+nbproject/private/

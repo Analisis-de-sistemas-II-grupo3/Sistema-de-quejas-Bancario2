@@ -1,0 +1,21 @@
+:root { --color-principal: #0B3B60; --color-secundario: #13A6A6; --tinta: #14212b; --fondo: #f4f7fb; }
+* { box-sizing: border-box; }
+body { background: var(--fondo); color: var(--tinta); font-family: Inter, system-ui, -apple-system, "Segoe UI", sans-serif; }
+.marca { display: inline-flex; align-items: center; gap: .65rem; color: var(--color-principal); font-weight: 750; text-decoration: none; }
+.marca-sello { width: 2.35rem; height: 2.35rem; display: grid; place-items: center; border-radius: .75rem; color: #fff; background: linear-gradient(135deg, var(--color-principal), var(--color-secundario)); font-size: .78rem; font-weight: 800; letter-spacing: .04em; }
+.barra-principal { background: rgba(255,255,255,.92); border-bottom: 1px solid #e3eaf1; backdrop-filter: blur(10px); }
+.boton-principal { background: var(--color-principal); border-color: var(--color-principal); }
+.boton-principal:hover, .boton-principal:focus { background: #082e4b; border-color: #082e4b; }
+.boton-secundario { color: var(--color-principal); border-color: #9db4c5; }
+.boton-secundario:hover { color: #fff; background: var(--color-principal); border-color: var(--color-principal); }
+.tarjeta-elevada { border: 0; border-radius: 1rem; box-shadow: 0 .75rem 2.25rem rgba(18, 48, 72, .09); }
+.pie { color: #627383; font-size: .875rem; }
+.hero-inicio { background: radial-gradient(circle at 84% 16%, rgba(19,166,166,.22), transparent 25rem), linear-gradient(125deg, #082e4b, var(--color-principal)); color: white; overflow: hidden; }
+.hero-inicio .etiqueta { color: #c8f5f0; font-size: .79rem; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; }
+.hero-inicio h1 { max-width: 46rem; font-weight: 750; letter-spacing: -.035em; }
+.hero-panel { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.2); border-radius: 1rem; }
+.icono-servicio { width: 2.8rem; height: 2.8rem; display: grid; place-items: center; border-radius: .8rem; background: #e7f5f4; color: var(--color-principal); font-size: 1.35rem; }
+.paso { width: 2rem; height: 2rem; display: inline-grid; place-items: center; border-radius: 50%; color: white; background: var(--color-secundario); font-weight: 700; }
+.enlace-suave { color: var(--color-principal); font-weight: 650; text-decoration: none; }
+.enlace-suave:hover { color: var(--color-secundario); text-decoration: underline; }
+.form-control:focus, .form-select:focus { border-color: var(--color-secundario); box-shadow: 0 0 0 .25rem rgba(19,166,166,.15); }

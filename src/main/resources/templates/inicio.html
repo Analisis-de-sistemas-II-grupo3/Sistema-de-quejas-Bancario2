@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es" xmlns:th="https://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="${institucion.nombre} + ' | Sistema de atención'">Sistema de atención</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link th:href="@{/css/estilos-institucionales.css}" rel="stylesheet">
+</head>
+<body th:style="|--color-principal:${institucion.colorPrimario};--color-secundario:${institucion.colorSecundario};|">
+  <header class="barra-principal"><nav class="container py-3 d-flex justify-content-between align-items-center">
+    <a class="marca" th:href="@{/}"><span class="marca-sello" th:text="${institucion.siglas}">BC</span><span th:text="${institucion.nombre}">Banco Confianza</span></a>
+    <a class="btn boton-principal px-3" th:href="@{/login}">Iniciar sesión</a>
+  </nav></header>
+  <main>
+    <section class="hero-inicio"><div class="container py-5 py-lg-6"><div class="row align-items-center g-5 py-lg-4">
+      <div class="col-lg-7"><p class="etiqueta mb-3">Canal oficial de atención</p><h1 class="display-5 mb-3">Tu voz nos ayuda a ofrecer un mejor servicio.</h1><p class="lead text-white-50 mb-4">Registra y da seguimiento a asuntos relacionados exclusivamente con productos y servicios bancarios.</p><div class="d-flex flex-wrap gap-3"><a class="btn btn-light btn-lg px-4" th:href="@{/login}">Registrar un caso</a><a class="btn btn-outline-light btn-lg px-4" th:href="@{/consulta-estado}">Consultar estado</a></div></div>
+      <div class="col-lg-5"><aside class="hero-panel p-4"><p class="fw-semibold mb-3">Un canal claro y seguro</p><div class="d-flex gap-3 mb-3"><span class="paso">1</span><p class="mb-0">Inicia sesión con tus credenciales.</p></div><div class="d-flex gap-3 mb-3"><span class="paso">2</span><p class="mb-0">Registra los datos de tu caso.</p></div><div class="d-flex gap-3"><span class="paso">3</span><p class="mb-0">Conserva tu folio para conocer su estado.</p></div></aside></div>
+    </div></div></section>
+    <section class="container py-5"><div class="text-center mx-auto mb-4" style="max-width:680px"><p class="text-uppercase fw-semibold small mb-2" style="color:var(--color-secundario)">¿Cómo podemos ayudarte?</p><h2 class="h2">Atención para asuntos bancarios</h2><p class="text-secondary mb-0">Selecciona el tipo de caso que describa mejor tu experiencia. Tu información será atendida por el área correspondiente.</p></div>
+      <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-3"><div class="col" th:each="tipo : ${ {'Queja','Reclamo','Denuncia','Sugerencia'} }"><article class="card tarjeta-elevada h-100"><div class="card-body p-4"><div class="icono-servicio mb-3" th:switch="${tipo}"><span th:case="'Queja'">!</span><span th:case="'Reclamo'">$</span><span th:case="'Denuncia'">!</span><span th:case="*">+</span></div><h3 class="h5" th:text="${tipo}">Queja</h3><p class="small text-secondary mb-0" th:switch="${tipo}"><span th:case="'Queja'">Inconformidad con la atención o servicio recibido.</span><span th:case="'Reclamo'">Solicitud de revisión por una situación bancaria.</span><span th:case="'Denuncia'">Reporte de un posible incumplimiento o irregularidad.</span><span th:case="*">Propuesta para mejorar nuestros servicios.</span></p></div></article></div></div>
+    </section>
+    <section class="container pb-5"><div class="card tarjeta-elevada"><div class="card-body p-4 p-md-5 d-md-flex align-items-center justify-content-between gap-4"><div><h2 class="h4">¿Ya tienes un caso registrado?</h2><p class="text-secondary mb-0">Consulta su estado utilizando el folio que recibiste al registrarlo.</p></div><a class="btn boton-secundario text-nowrap" th:href="@{/consulta-estado}">Consultar estado de un caso</a></div></div></section>
+  </main>
+  <footer class="border-top bg-white"><div class="container py-4 d-flex flex-column flex-sm-row justify-content-between gap-2 pie"><span th:text="${institucion.nombre} + ' · Sistema de Quejas, Reclamos, Denuncias y Sugerencias'">Banco</span><span>Canal de atención bancaria</span></div></footer>
+</body></html>

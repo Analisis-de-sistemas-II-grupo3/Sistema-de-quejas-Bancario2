@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es" xmlns:th="https://www.thymeleaf.org"><head>
+  <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title th:text="'Iniciar sesión | ' + ${institucion.nombre}">Iniciar sesión</title><link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"><link th:href="@{/css/estilos-institucionales.css}" rel="stylesheet">
+</head><body th:style="|--color-principal:${institucion.colorPrimario};--color-secundario:${institucion.colorSecundario};|"><header class="barra-principal"><nav class="container py-3"><a class="marca" th:href="@{/}"><span class="marca-sello" th:text="${institucion.siglas}">BC</span><span th:text="${institucion.nombre}">Banco</span></a></nav></header><main class="container py-4 py-md-5 d-flex justify-content-center">
+  <div class="card tarjeta-elevada" style="max-width:420px;width:100%">
+    <div class="card-body p-4 p-md-5">
+      <p class="text-uppercase small fw-semibold mb-2" style="color:var(--color-secundario)">Acceso seguro</p><h1 class="h3 mb-1">Iniciar sesión</h1>
+      <p class="text-secondary small mb-4">Ingresa para registrar y gestionar casos bancarios.</p>
+      <div th:if="${error}" class="alert alert-danger py-2" th:text="${error}"></div>
+      <form th:action="@{/login}" th:object="${credenciales}" method="post">
+        <div class="mb-3">
+          <label class="form-label" for="usuario">Usuario</label>
+          <input id="usuario" th:field="*{usuario}" class="form-control" required autofocus>
+        </div>
+        <div class="mb-4">
+          <label class="form-label" for="contrasena">Contraseña</label>
+          <input id="contrasena" type="password" th:field="*{contrasena}" class="form-control" required>
+        </div>
+        <button class="btn boton-principal w-100" type="submit">Ingresar</button>
+      </form>
+      <div class="text-center mt-4"><a class="enlace-suave small" th:href="@{/}">Volver a la página de inicio</a></div>
+    </div>
+  </div>
+</main></body></html>
