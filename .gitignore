@@ -7,3 +7,4 @@ work-m2/
 uploads/
 *.class
 nbproject/private/
+application-local.properties
