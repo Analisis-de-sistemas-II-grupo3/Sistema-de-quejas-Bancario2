@@ -1,6 +1,16 @@
-# Sistema de Quejas Bancario — CU00, CU01 y CU02
+# Sistema de Quejas Bancario — CU00, CU01, CU02 y CU03
 
-Aplicación web local con Java, Spring Boot y Thymeleaf. Implementa CU00 V1.0, CU01 V1.3 y CU02 V1.4; los datos viven temporalmente en memoria.
+Aplicación web con Java, Spring Boot y Thymeleaf. Implementa CU00 V1.0, CU01 V1.3, CU02 V1.4 y CU03 V1.2.
+
+## CU03 - Adjuntar Evidencia al Caso
+
+- Permite adjuntar uno o varios archivos desde un caso recién registrado.
+- Solo el Cliente dueño del caso o un Agente de Atención pueden cargar evidencia.
+- Formatos: PDF, JPG, JPEG y PNG.
+- Tamaño máximo por archivo: 2 MB para Cliente y 10 MB para Agente de Atención.
+- Guarda en PostgreSQL/Neon el archivo, sus metadatos y el evento de carga en bitácora.
+- Permite descargar cada evidencia con una comprobación de permisos.
+- La explicación sencilla de las clases está en `GUIA_CU03.md`.
 
 ## CU00 - Portal / Página de Inicio
 
