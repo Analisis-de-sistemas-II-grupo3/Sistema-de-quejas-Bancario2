@@ -44,9 +44,14 @@ public class RegistroCasoController {
             Caso caso = registrador.registrar(contexto == null ? null : contexto.cliente(), contexto == null ? null : contexto.sesion(),
                     new SolicitudRegistroCaso(formulario.getTipo(), formulario.getProductoId(), formulario.getSucursalCanal(),
                             formulario.getFechaHecho(), formulario.getDescripcion(), documento));
+            if (documento != null) {
+                String nombre = adjunto.getOriginalFilename() == null ? "archivo" : adjunto.getOriginalFilename();
+                registrador.guardarEvidencia(caso.folio(), new EvidenciaCaso(null, nombre, documento.ruta(),
+                        documento.tamanioBytes(), documento.extension(), contexto.sesion().usuario(), java.time.LocalDateTime.now()), contexto.sesion());
+            }
             modelo.addAttribute("caso", caso);
             return "caso-exito";
-        } catch (RegistroCasoException e) {
+        } catch (RegistroCasoException | ErrorEvidenciaException e) {
             almacenAdjuntos.eliminar(documento);
             return prepararFormulario(modelo, formulario, contexto == null ? null : contexto.cliente(), e.getMessage());
         }

@@ -15,15 +15,23 @@ public class RegistradorCasos {
     private final List<Notificacion> notificaciones = new ArrayList<>();
     private final Map<String, AtomicInteger> correlativos = new HashMap<>();
     private final Random aleatorio = new Random();
+    private final RepositorioCasosPostgres repositorioPostgres;
 
     public RegistradorCasos(Collection<ProductoServicio> catalogo, List<AgenteAtencion> agentes) {
         catalogo.forEach(producto -> this.catalogo.put(producto.id(), producto));
         this.agentes = new ArrayList<>(agentes);
+        this.repositorioPostgres = null;
+    }
+    /** Constructor de producción: catálogo y casos se leen/escriben en PostgreSQL. */
+    public RegistradorCasos(RepositorioCasosPostgres repositorioPostgres) {
+        this.agentes = new ArrayList<>();
+        this.repositorioPostgres = repositorioPostgres;
     }
 
     public Caso registrar(Cliente cliente, SesionUsuario sesion, SolicitudRegistroCaso solicitud) {
         validarClienteAutenticado(cliente, sesion);
         validarSolicitud(solicitud);
+        if (repositorioPostgres != null) return repositorioPostgres.guardarCaso(cliente, sesion, solicitud);
         LocalDateTime ahora = LocalDateTime.now();
         String folio = siguienteFolio(solicitud.tipo(), ahora.getYear());
         AgenteAtencion agente = reservarAgenteDisponible();
@@ -39,10 +47,35 @@ public class RegistradorCasos {
         return caso;
     }
 
-    public List<ProductoServicio> consultarCatalogo() { return catalogo.values().stream().sorted(Comparator.comparing(ProductoServicio::nombre)).toList(); }
+    public List<ProductoServicio> consultarCatalogo() { return repositorioPostgres != null ? repositorioPostgres.catalogo() : catalogo.values().stream().sorted(Comparator.comparing(ProductoServicio::nombre)).toList(); }
     public List<Caso> consultarCasos() { return List.copyOf(casos); }
+    /** CU03 usa este método para comprobar que el folio pertenece a un caso existente. */
+    public Optional<Caso> buscarPorFolio(String folio) {
+        if (folio == null || folio.isBlank()) return Optional.empty();
+        return repositorioPostgres != null ? repositorioPostgres.buscar(folio.trim()) : casos.stream().filter(caso -> caso.folio().equalsIgnoreCase(folio.trim())).findFirst();
+    }
     public List<EventoBitacora> consultarBitacora() { return List.copyOf(bitacora); }
     public List<Notificacion> consultarNotificaciones() { return List.copyOf(notificaciones); }
+
+    /** CU03 registra aquí la carga de evidencia mientras CU de Auditoría se integra. */
+    public void registrarCargaEvidencia(String folio, SesionUsuario sesion, String descripcion) {
+        bitacora.add(new EventoBitacora(LocalDateTime.now(), folio, "CARGA DE EVIDENCIA", null, null,
+                sesion.rol(), sesion.usuario(), sesion.ip(), descripcion));
+    }
+    /** Guarda los datos de CU03 en documento_adjunto cuando se usa PostgreSQL. */
+    public void guardarEvidencia(String folio, EvidenciaCaso evidencia, SesionUsuario sesion) {
+        if (repositorioPostgres != null) repositorioPostgres.guardarDocumento(folio, evidencia, sesion);
+    }
+    public void guardarEvidencias(String folio, List<EvidenciaCaso> evidencias, SesionUsuario sesion) {
+        if (repositorioPostgres != null) repositorioPostgres.guardarDocumentos(folio, evidencias, sesion);
+    }
+    public List<EvidenciaCaso> consultarEvidencias(String folio) {
+        return repositorioPostgres != null ? repositorioPostgres.documentos(folio) : List.of();
+    }
+    public ArchivoEvidencia descargarEvidencia(String folio, long documentoId) {
+        if (repositorioPostgres == null) throw new ErrorEvidenciaException("La descarga requiere la conexión a PostgreSQL.");
+        return repositorioPostgres.obtenerArchivo(folio, documentoId);
+    }
 
     private void validarClienteAutenticado(Cliente cliente, SesionUsuario sesion) {
         if (cliente == null || sesion == null || !"Cliente".equalsIgnoreCase(sesion.rol()))
@@ -54,7 +87,7 @@ public class RegistradorCasos {
         if (solicitud == null) throw new RegistroCasoException("La solicitud es obligatoria.");
         obligatorio(solicitud.tipo(), "Debe seleccionar un tipo de caso.");
         obligatorio(solicitud.productoId(), "Debe seleccionar un producto o servicio bancario.");
-        if (!catalogo.containsKey(solicitud.productoId())) throw new RegistroCasoException("El sistema solo atiende productos o servicios bancarios del catálogo institucional.");
+        if (repositorioPostgres != null ? !repositorioPostgres.existeProducto(solicitud.productoId()) : !catalogo.containsKey(solicitud.productoId())) throw new RegistroCasoException("El sistema solo atiende productos o servicios bancarios del catálogo institucional.");
         obligatorio(solicitud.sucursalCanal(), "Debe indicar la sucursal o canal donde ocurrió el hecho.");
         if (solicitud.fechaHecho() == null) throw new RegistroCasoException("Debe indicar la fecha del hecho.");
         obligatorio(solicitud.descripcion(), "Debe ingresar la descripción del caso.");
