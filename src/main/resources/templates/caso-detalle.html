@@ -1,0 +1,25 @@
+<!doctype html>
+<html lang="es" xmlns:th="https://www.thymeleaf.org"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title th:text="'Caso ' + ${caso.folio} + ' | ' + ${institucion.nombre}">Detalle del caso</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet"><link th:href="@{/css/estilos-institucionales.css}" rel="stylesheet"></head>
+<body th:style="|--color-principal:${institucion.colorPrimario};--color-secundario:${institucion.colorSecundario};|">
+<header class="barra-principal"><nav class="container py-3"><a class="marca" th:href="@{/}"><span class="marca-sello" th:text="${institucion.siglas}">BC</span><span th:text="${institucion.nombre}">Banco</span></a></nav></header>
+<main class="container py-5" style="max-width:720px">
+  <div class="card tarjeta-elevada">
+    <div class="card-body p-4 p-md-5">
+      <p class="text-uppercase small fw-semibold mb-2" style="color:var(--color-secundario)">Detalle del caso</p>
+      <h1 class="h3 mb-4" th:text="${caso.folio}"></h1>
+      <dl class="row mb-4">
+        <dt class="col-sm-4">Estado actual</dt><dd class="col-sm-8"><span class="badge boton-secundario" th:text="${caso.estado}"></span></dd>
+        <dt class="col-sm-4">Tipo de caso</dt><dd class="col-sm-8" th:text="${caso.tipo}"></dd>
+        <dt class="col-sm-4">Fecha de registro</dt><dd class="col-sm-8" th:text="${#temporals.format(caso.fechaRegistro, 'dd/MM/yyyy HH:mm')}"></dd>
+        <dt class="col-sm-4">Producto o servicio</dt><dd class="col-sm-8" th:text="${caso.producto != null ? caso.producto.nombre : '—'}"></dd>
+        <dt class="col-sm-4">Sucursal o canal</dt><dd class="col-sm-8" th:text="${caso.sucursalCanal}"></dd>
+        <dt class="col-sm-4">Agente asignado</dt><dd class="col-sm-8" th:text="${caso.agenteAsignado != null ? caso.agenteAsignado.nombre : 'Pendiente de disponibilidad'}"></dd>
+        <dt class="col-sm-4">Descripción</dt><dd class="col-sm-8" th:text="${caso.descripcion}"></dd>
+      </dl>
+      <a class="btn boton-principal" th:href="@{/consulta-estado}">Regresar</a>
+    </div>
+  </div>
+</main>
+</body></html>

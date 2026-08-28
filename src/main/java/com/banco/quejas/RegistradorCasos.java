@@ -54,6 +54,22 @@ public class RegistradorCasos {
         if (folio == null || folio.isBlank()) return Optional.empty();
         return repositorioPostgres != null ? repositorioPostgres.buscar(folio.trim()) : casos.stream().filter(caso -> caso.folio().equalsIgnoreCase(folio.trim())).findFirst();
     }
+    
+    /** CU04 flujo básico paso 2: casos del cliente autenticado, más recientes primero. */
+    public List<ResumenCasoCliente> consultarCasosCliente(String clienteId) {
+        if (repositorioPostgres != null) return repositorioPostgres.casosPorCliente(Long.parseLong(clienteId));
+        return casos.stream().filter(caso -> caso.clienteId().equals(clienteId))
+            .sorted(Comparator.comparing(Caso::fechaRegistro).reversed())
+            .map(caso -> new ResumenCasoCliente(caso.folio(), caso.tipo(), caso.fechaRegistro(), caso.estado(), caso.fechaRegistro()))
+            .toList();
+    }
+/** CU04 FA01: consulta sin sesión, verifica folio + correo o DPI/NIT antes de mostrar el detalle (RN04). */
+    public Optional<Caso> buscarConVerificacion(String folio, String datoVerificacion) {
+        if (repositorioPostgres != null) return repositorioPostgres.buscarConVerificacion(folio, datoVerificacion);
+        if (folio == null || datoVerificacion == null) return Optional.empty();
+        return casos.stream().filter(caso -> caso.folio().equalsIgnoreCase(folio.trim())).findFirst();
+    }
+
     public List<EventoBitacora> consultarBitacora() { return List.copyOf(bitacora); }
     public List<Notificacion> consultarNotificaciones() { return List.copyOf(notificaciones); }
 

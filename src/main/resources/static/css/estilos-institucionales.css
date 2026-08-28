@@ -4,8 +4,8 @@ body { background: var(--fondo); color: var(--tinta); font-family: Inter, system
 .marca { display: inline-flex; align-items: center; gap: .65rem; color: var(--color-principal); font-weight: 750; text-decoration: none; }
 .marca-sello { width: 2.35rem; height: 2.35rem; display: grid; place-items: center; border-radius: .75rem; color: #fff; background: linear-gradient(135deg, var(--color-principal), var(--color-secundario)); font-size: .78rem; font-weight: 800; letter-spacing: .04em; }
 .barra-principal { background: rgba(255,255,255,.92); border-bottom: 1px solid #e3eaf1; backdrop-filter: blur(10px); }
-.boton-principal { background: var(--color-principal); border-color: var(--color-principal); }
-.boton-principal:hover, .boton-principal:focus { background: #082e4b; border-color: #082e4b; }
+.boton-principal { background: var(--color-principal); border-color: var(--color-principal); color: #fff; }
+.boton-principal:hover, .boton-principal:focus { background: #082e4b; border-color: #082e4b; color: #fff; }
 .boton-secundario { color: var(--color-principal); border-color: #9db4c5; }
 .boton-secundario:hover { color: #fff; background: var(--color-principal); border-color: var(--color-principal); }
 .tarjeta-elevada { border: 0; border-radius: 1rem; box-shadow: 0 .75rem 2.25rem rgba(18, 48, 72, .09); }

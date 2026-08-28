@@ -1,5 +1,4 @@
 package com.banco.quejas;
-
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import org.springframework.boot.ApplicationRunner;
@@ -8,7 +7,6 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
-
 /** Completa el esquema Neon y datos mínimos. Sus sentencias son seguras de repetir. */
 @Configuration
 public class InicializadorPostgres {
@@ -22,6 +20,7 @@ public class InicializadorPostgres {
             jdbc.execute("ALTER TABLE producto_servicio ADD COLUMN IF NOT EXISTS id_categoria BIGINT REFERENCES categoria(id_categoria)");
             jdbc.execute("ALTER TABLE documento_adjunto ADD COLUMN IF NOT EXISTS tipo_contenido VARCHAR(100)");
             jdbc.execute("ALTER TABLE documento_adjunto ADD COLUMN IF NOT EXISTS contenido BYTEA");
+            jdbc.execute("ALTER TABLE usuario ADD COLUMN IF NOT EXISTS dpi_nit VARCHAR(20)");
             for (String rol : new String[]{"CLIENTE", "AGENTE", "SUPERVISOR", "ADMINISTRADOR", "AUDITOR"}) {
                 jdbc.update("INSERT INTO rol(nombre_rol) VALUES (?) ON CONFLICT(nombre_rol) DO NOTHING", rol);
             }
@@ -30,6 +29,7 @@ public class InicializadorPostgres {
             crearUsuario(jdbc, codificador, "sofia.ruiz", "Supervisor#2026", "Sofía Ruiz", "sofia.ruiz@correo.com", "SUPERVISOR");
             crearUsuario(jdbc, codificador, "admin", "Admin#2026", "Administrador del sistema", "admin@correo.com", "ADMINISTRADOR");
             crearUsuario(jdbc, codificador, "auditor1", "Auditor#2026", "José Martínez", "auditor1@correo.com", "AUDITOR");
+            jdbc.update("UPDATE usuario SET dpi_nit = '2589631470101' WHERE nombre_usuario = 'ana.lopez' AND dpi_nit IS NULL");
             Long clienteId = jdbc.queryForObject("SELECT id_usuario FROM usuario WHERE nombre_usuario = 'ana.lopez'", Long.class);
             jdbc.update("INSERT INTO cuenta_bancaria(estado, numero_cuenta, id_usuario) VALUES (TRUE, '1234567890', ?) ON CONFLICT(numero_cuenta) DO NOTHING", clienteId);
             jdbc.update("UPDATE producto_servicio SET id_categoria = (SELECT id_categoria FROM categoria ORDER BY id_categoria LIMIT 1) WHERE id_categoria IS NULL");

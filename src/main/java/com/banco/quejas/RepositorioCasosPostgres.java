@@ -11,7 +11,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Consultas PostgreSQL necesarias para CU02 y CU03. */
+/** Consultas PostgreSQL necesarias para CU02, CU03 y CU04. */
 @Repository
 public class RepositorioCasosPostgres {
     private final JdbcTemplate jdbc;
@@ -48,6 +48,26 @@ public class RepositorioCasosPostgres {
     }
     public java.util.Optional<Caso> buscar(String folio) {
         return jdbc.query("SELECT c.numero_caso,u.id_usuario,u.nombre_completo,tc.nombre,p.id_producto,p.nombre,c.sucursal_canal,c.fecha_hecho,c.descripcion,c.estado,c.fecha_registro FROM caso c JOIN usuario u ON u.id_usuario=c.id_cliente JOIN tipo_caso tc ON tc.id_tipo_caso=c.id_tipo_caso JOIN producto_servicio p ON p.id_producto=c.id_producto WHERE c.numero_caso=?", (rs,fila) -> new Caso(rs.getString(1),String.valueOf(rs.getLong(2)),rs.getString(3),TipoCaso.valueOf(rs.getString(4).toUpperCase()),new ProductoServicio(String.valueOf(rs.getLong(5)),rs.getString(6)),rs.getString(7),rs.getDate(8).toLocalDate(),rs.getString(9),null,EstadoCaso.valueOf(rs.getString(10)),null,rs.getTimestamp(11).toLocalDateTime()),folio).stream().findFirst();
+    }
+    /** CU04 flujo básico paso 2: listado "Mis Casos" del cliente autenticado. */
+    public List<ResumenCasoCliente> casosPorCliente(long clienteId) {
+        return jdbc.query("SELECT c.numero_caso,tc.nombre,c.fecha_registro,c.estado, " +
+                "COALESCE((SELECT MAX(b.fecha_hora) FROM bitacora_caso b WHERE b.id_caso=c.id_caso), c.fecha_registro) " +
+                "FROM caso c JOIN tipo_caso tc ON tc.id_tipo_caso=c.id_tipo_caso " +
+                "WHERE c.id_cliente=? ORDER BY c.fecha_registro DESC",
+                (rs, fila) -> new ResumenCasoCliente(rs.getString(1), TipoCaso.valueOf(rs.getString(2).toUpperCase()),
+                        rs.getTimestamp(3).toLocalDateTime(), EstadoCaso.valueOf(rs.getString(4)), rs.getTimestamp(5).toLocalDateTime()),
+                clienteId);
+    }
+    /** CU04 FA01: consulta sin sesión, verificando folio + correo o DPI/NIT del cliente dueño del caso (RN04). */
+    public java.util.Optional<Caso> buscarConVerificacion(String folio, String datoVerificacion) {
+        return jdbc.query("SELECT c.numero_caso,u.id_usuario,u.nombre_completo,tc.nombre,p.id_producto,p.nombre,c.sucursal_canal,c.fecha_hecho,c.descripcion,c.estado,c.fecha_registro " +
+                "FROM caso c JOIN usuario u ON u.id_usuario=c.id_cliente JOIN tipo_caso tc ON tc.id_tipo_caso=c.id_tipo_caso JOIN producto_servicio p ON p.id_producto=c.id_producto " +
+                "WHERE c.numero_caso=? AND (LOWER(u.correo_electronico)=LOWER(?) OR UPPER(u.dpi_nit)=UPPER(?))",
+                (rs,fila) -> new Caso(rs.getString(1),String.valueOf(rs.getLong(2)),rs.getString(3),TipoCaso.valueOf(rs.getString(4).toUpperCase()),
+                        new ProductoServicio(String.valueOf(rs.getLong(5)),rs.getString(6)),rs.getString(7),rs.getDate(8).toLocalDate(),rs.getString(9),null,
+                        EstadoCaso.valueOf(rs.getString(10)),null,rs.getTimestamp(11).toLocalDateTime()),
+                folio.trim(), datoVerificacion.trim(), datoVerificacion.trim()).stream().findFirst();
     }
     @Transactional
     public void guardarDocumento(String folio, EvidenciaCaso evidencia, SesionUsuario sesion) {
