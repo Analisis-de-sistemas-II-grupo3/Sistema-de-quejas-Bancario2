@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 
 
 /**
- * CU04 V1.1 - Consultar Estado de Caso.
+ * CU04 V1.3 - Consultar Estado de Caso.
  * Flujo básico: Cliente autenticado ve "Mis Casos" y su detalle.
  * FA01: consulta sin sesión, verificando folio + correo del caso.
  * FA02: mensaje AN02 #18 cuando el cliente no tiene casos registrados.
@@ -59,12 +59,10 @@ public class ConsultaEstadoController {
         Optional<Caso> caso = registrador.buscarConVerificacion(formulario.getFolio(), formulario.getDatoVerificacion());
         if (caso.isEmpty()) {
             modelo.addAttribute("formulario", formulario);
-            modelo.addAttribute("error", "Por favor verifique, el número de caso no existe en el sistema.");
+            modelo.addAttribute("error", "El número de caso o el dato de verificación no son válidos.");
             return "consulta-estado-publica";
         }
-        modelo.addAttribute("caso", caso.get());
-        modelo.addAttribute("origenPublico", true);
-        return "caso-detalle";
+        return prepararDetalle(caso.get(), true, modelo);
     }
 
     /** Paso 4-5 del flujo básico: "Ver Detalle" para un caso propio del cliente autenticado. */
@@ -78,8 +76,14 @@ public class ConsultaEstadoController {
             modelo.addAttribute("casos", registrador.consultarCasosCliente(contexto.cliente().id()));
             return "mis-casos";
         }
-        modelo.addAttribute("caso", caso.get());
-        modelo.addAttribute("origenPublico", false);
+        return prepararDetalle(caso.get(), false, modelo);
+    }
+
+    private String prepararDetalle(Caso caso, boolean origenPublico, Model modelo) {
+        modelo.addAttribute("caso", caso);
+        modelo.addAttribute("historial", registrador.consultarHistorial(caso.folio()));
+        modelo.addAttribute("evidencias", registrador.consultarEvidencias(caso.folio()));
+        modelo.addAttribute("origenPublico", origenPublico);
         return "caso-detalle";
     }
 

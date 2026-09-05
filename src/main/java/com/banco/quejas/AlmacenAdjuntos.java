@@ -1,6 +1,10 @@
 package com.banco.quejas;
 
 import java.io.IOException;
+import java.io.ByteArrayInputStream;
+import java.awt.image.BufferedImage;
+import java.nio.charset.StandardCharsets;
+import javax.imageio.ImageIO;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -45,7 +49,11 @@ public class AlmacenAdjuntos {
         }
     }
 
-    /** Valida formato y tamaño sin guardar nada en el disco. */
+    /**
+     * Valida formato, tamaño e integridad antes de escribir en el disco.
+     * Un PDF debe tener su estructura básica, páginas y no estar cifrado.
+     * Una imagen debe poder ser leída por ImageIO.
+     */
     public void validar(MultipartFile archivo, long limiteBytes) {
         if (archivo == null || archivo.isEmpty()) throw new ErrorEvidenciaException("El archivo seleccionado está vacío.");
         String nombre = archivo.getOriginalFilename() == null ? "" : archivo.getOriginalFilename();
@@ -53,6 +61,47 @@ public class AlmacenAdjuntos {
         String extension = punto < 0 ? "" : nombre.substring(punto + 1).toLowerCase(Locale.ROOT);
         if (!EXTENSIONES.contains(extension)) throw new ErrorEvidenciaException("Solo se permiten archivos PDF o imágenes JPG, JPEG y PNG.");
         if (archivo.getSize() > limiteBytes) throw new ErrorEvidenciaException("Cada archivo no puede exceder " + (limiteBytes / (1024 * 1024)) + " MB.");
+        try {
+            byte[] contenido = archivo.getBytes();
+            if (contenido.length == 0) throw new ErrorEvidenciaException("El documento está vacío o no se puede leer.");
+            if ("pdf".equals(extension)) validarPdf(contenido);
+            else validarImagen(contenido);
+        } catch (IOException error) {
+            throw new ErrorEvidenciaException("No fue posible leer el documento adjunto.");
+        }
+    }
+
+    private void validarPdf(byte[] contenido) {
+        // Un PDF válido siempre comienza así. ISO-8859-1 conserva los bytes sin
+        // modificar; no se usa la codificación por defecto de Windows.
+        String texto = new String(contenido, StandardCharsets.ISO_8859_1);
+        if (!texto.startsWith("%PDF-")) {
+            throw new ErrorEvidenciaException("El archivo no tiene una estructura PDF válida.");
+        }
+        if (texto.lastIndexOf("%%EOF") < 0 || texto.lastIndexOf("startxref") < 0) {
+            throw new ErrorEvidenciaException("El PDF está incompleto o dañado.");
+        }
+        if (texto.contains("/Encrypt")) {
+            throw new ErrorEvidenciaException("El PDF está protegido con contraseña o restricciones de acceso.");
+        }
+        // /Type /Page identifica páginas individuales; /Pages es solamente el
+        // contenedor y no debe aceptar por sí solo un documento vacío.
+        if (!texto.matches("(?s).*?/Type\\s*/Page(?!s).*")) {
+            throw new ErrorEvidenciaException("El PDF está vacío o no contiene páginas legibles.");
+        }
+    }
+
+    private void validarImagen(byte[] contenido) {
+        try {
+            BufferedImage imagen = ImageIO.read(new ByteArrayInputStream(contenido));
+            if (imagen == null || imagen.getWidth() < 1 || imagen.getHeight() < 1) {
+                throw new ErrorEvidenciaException("La imagen está dañada o no se puede abrir.");
+            }
+        } catch (ErrorEvidenciaException error) {
+            throw error;
+        } catch (IOException error) {
+            throw new ErrorEvidenciaException("La imagen está dañada o no se puede abrir.");
+        }
     }
 
     public void eliminar(DocumentoAdjunto adjunto) {

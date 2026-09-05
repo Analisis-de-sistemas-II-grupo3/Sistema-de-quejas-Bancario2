@@ -13,13 +13,16 @@ public class IdentidadInstitucional {
     private String nombre;
     @Value("${institucion.siglas:BC}")
     private String siglas;
-    @Value("${institucion.color-primario:#0B3B60}")
+    @Value("${institucion.color-primario:#4A1830}")
     private String colorPrimario;
-    @Value("${institucion.color-secundario:#13A6A6}")
+    @Value("${institucion.color-secundario:#D8A348}")
     private String colorSecundario;
+    @Value("${institucion.logo-url:/img/logo-banco.svg}")
+    private String logoUrl;
 
     public String getNombre() { return nombre; }
     public String getSiglas() { return siglas; }
     public String getColorPrimario() { return colorPrimario; }
     public String getColorSecundario() { return colorSecundario; }
+    public String getLogoUrl() { return logoUrl; }
 }

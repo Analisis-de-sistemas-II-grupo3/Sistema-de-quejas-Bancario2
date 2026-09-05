@@ -17,9 +17,13 @@
           <label class="form-label" for="contrasena">Contraseña</label>
           <input id="contrasena" type="password" th:field="*{contrasena}" class="form-control" required>
         </div>
-        <button class="btn boton-principal w-100" type="submit">Ingresar</button>
+        <button id="ingresar" class="btn boton-principal w-100" type="submit" disabled>Ingresar</button>
       </form>
       <div class="text-center mt-4"><a class="enlace-suave small" th:href="@{/}">Volver a la página de inicio</a></div>
     </div>
   </div>
-</main></body></html>
+</main><script>
+const usuario=document.getElementById('usuario'), contrasena=document.getElementById('contrasena'), ingresar=document.getElementById('ingresar');
+function actualizarBoton(){ ingresar.disabled=!(usuario.value.trim() && contrasena.value); }
+usuario.addEventListener('input',actualizarBoton); contrasena.addEventListener('input',actualizarBoton); actualizarBoton();
+</script></body></html>

@@ -11,21 +11,21 @@
   <div th:if="${cliente == null}" class="alert alert-danger">Debe iniciar sesión como Cliente para registrar un caso.</div>
   <div th:if="${error}" class="alert alert-danger" th:text="${error}"></div>
   <form th:action="@{/casos}" th:object="${formulario}" method="post" enctype="multipart/form-data">
-    <section id="paso1" class="card shadow-sm"><div class="card-body p-4">
+    <section id="paso1" class="card shadow-sm" th:classappend="${mostrarPaso2} ? 'd-none' : ''"><div class="card-body p-4">
       <span class="badge text-bg-primary">Paso 1 de 2</span><h2 class="h4 mt-2">Tipo de caso</h2>
       <label class="form-label" for="tipo">Seleccione el tipo *</label><select id="tipo" th:field="*{tipo}" class="form-select" required><option value="">Seleccione una opción</option><option th:each="tipo : ${tipos}" th:value="${tipo}" th:text="${tipo}"></option></select>
       <div class="d-flex justify-content-end mt-4"><button id="siguiente" class="btn btn-primary" type="button">Siguiente</button></div>
     </div></section>
-    <section id="paso2" class="card shadow-sm d-none"><div class="card-body p-4">
+    <section id="paso2" class="card shadow-sm" th:classappend="${mostrarPaso2} ? '' : 'd-none'"><div class="card-body p-4">
       <span class="badge text-bg-primary">Paso 2 de 2</span><h2 class="h4 mt-2">Información del caso</h2>
       <div class="row g-3">
         <div class="col-md-6"><label class="form-label">Producto o servicio bancario *</label><select th:field="*{productoId}" class="form-select" required><option value="">Seleccione una opción</option><option th:each="p : ${productos}" th:value="${p.id}" th:text="${p.nombre}"></option></select></div>
         <div class="col-md-6"><label class="form-label">Sucursal o canal *</label><input th:field="*{sucursalCanal}" placeholder="Ej.: Agencia Central o Banca en línea" class="form-control" required></div>
         <div class="col-md-6"><label class="form-label">Fecha del hecho *</label><input type="date" th:field="*{fechaHecho}" class="form-control" required></div>
         <div class="col-12"><label class="form-label">Descripción del caso *</label><textarea th:field="*{descripcion}" class="form-control" rows="5" maxlength="2000" required></textarea><div class="form-text">Máximo 2,000 caracteres.</div></div>
-        <div class="col-12"><label class="form-label">Adjuntar evidencia (opcional)</label><input type="file" name="adjunto" class="form-control" accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf"><div class="form-text">PDF o imagen, máximo 2 MB.</div></div>
+        <div class="col-12"><label class="form-label" for="adjunto">Adjuntar evidencia (opcional)</label><input id="adjunto" type="file" name="adjunto" class="form-control" th:classappend="${errorEvidencia} ? 'is-invalid' : ''" accept=".pdf,.jpg,.jpeg,.png,image/*,application/pdf" aria-describedby="ayudaAdjunto errorAdjunto"><div id="ayudaAdjunto" class="form-text">PDF o imagen, máximo 2 MB.</div><div id="errorAdjunto" th:if="${errorEvidencia}" class="invalid-feedback d-block"><strong>El archivo no se pudo adjuntar.</strong> <span th:text="${errorEvidencia}"></span> Selecciona otro archivo; los datos del caso se conservaron.</div></div>
       </div>
-      <div class="d-flex justify-content-between mt-4"><button id="atras" class="btn btn-outline-secondary" type="button">Atrás</button><div><a class="btn btn-outline-danger me-2" th:href="@{/casos/nuevo}">Cancelar</a><button class="btn btn-success" type="submit">Enviar caso</button></div></div>
+      <div class="d-flex justify-content-between mt-4"><button id="atras" class="btn btn-outline-secondary" type="button">Atrás</button><div><a class="btn btn-outline-danger me-2" th:href="@{/consulta-estado}">Cancelar</a><button class="btn boton-principal" type="submit">Enviar caso</button></div></div>
     </div></section>
   </form>
 </main><script>

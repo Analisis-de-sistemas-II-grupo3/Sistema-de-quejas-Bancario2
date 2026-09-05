@@ -33,7 +33,12 @@ public class ServicioEvidencias {
             throw new ErrorEvidenciaException("Debe seleccionar al menos un archivo.");
         }
         long limite = limitePara(contexto.sesion().rol());
-        for (MultipartFile archivo : archivos) almacen.validar(archivo, limite);
+        try {
+            for (MultipartFile archivo : archivos) almacen.validar(archivo, limite);
+        } catch (ErrorEvidenciaException error) {
+            casos.registrarCargaEvidencia(caso.folio(), contexto.sesion(), "INTENTO DE CARGA RECHAZADO: " + error.getMessage());
+            throw error;
+        }
 
         List<EvidenciaCaso> nuevas = new ArrayList<>();
         try {

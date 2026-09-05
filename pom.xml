@@ -10,9 +10,9 @@
         <relativePath/>
     </parent>
     <groupId>com.banco</groupId>
-    <artifactId>sistema-quejas-cu02</artifactId>
+    <artifactId>sistema-quejas-bancario</artifactId>
     <version>1.0-SNAPSHOT</version>
-    <name>Sistema de Quejas - CU02 Registrar Caso</name>
+    <name>Sistema de Quejas Bancario</name>
     <!-- Java 17 es suficiente para records y es ampliamente compatible con NetBeans. -->
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>

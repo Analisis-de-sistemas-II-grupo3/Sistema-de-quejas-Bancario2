@@ -57,6 +57,6 @@ public class LoginController {
             sesion.setAttribute(ClaveSesion.CIERRE_MANUAL, Boolean.TRUE);
             sesion.invalidate();
         }
-        return "redirect:/login";
+        return "redirect:/?sesionCerrada=true";
     }
 }

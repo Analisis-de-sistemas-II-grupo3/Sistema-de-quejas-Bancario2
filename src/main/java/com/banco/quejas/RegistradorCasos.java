@@ -4,7 +4,7 @@ import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
-/** Lógica local del CU02 V1.4. CU01 proporcionará la sesión real. */
+/** Lógica de negocio compartida por CU02, CU03 y CU04. */
 public class RegistradorCasos {
     private static final long MAX_ADJUNTO_BYTES = 2L * 1024 * 1024;
     private static final Set<String> EXTENSIONES_PERMITIDAS = Set.of("pdf", "jpg", "jpeg", "png");
@@ -71,12 +71,19 @@ public class RegistradorCasos {
     }
 
     public List<EventoBitacora> consultarBitacora() { return List.copyOf(bitacora); }
+    public List<EventoSeguimientoCaso> consultarHistorial(String folio) {
+        if (repositorioPostgres != null) return repositorioPostgres.historial(folio);
+        return bitacora.stream().filter(evento -> evento.numeroCaso().equalsIgnoreCase(folio)).map(evento ->
+                new EventoSeguimientoCaso(evento.fecha(), evento.descripcion(), evento.estadoAnterior(), evento.estadoNuevo(),
+                        evento.usuarioEjecutor(), evento.rolEjecutor())).toList();
+    }
     public List<Notificacion> consultarNotificaciones() { return List.copyOf(notificaciones); }
 
     /** CU03 registra aquí la carga de evidencia mientras CU de Auditoría se integra. */
     public void registrarCargaEvidencia(String folio, SesionUsuario sesion, String descripcion) {
         bitacora.add(new EventoBitacora(LocalDateTime.now(), folio, "CARGA DE EVIDENCIA", null, null,
                 sesion.rol(), sesion.usuario(), sesion.ip(), descripcion));
+        if (repositorioPostgres != null) repositorioPostgres.registrarEventoCaso(folio, sesion, descripcion);
     }
     /** Guarda los datos de CU03 en documento_adjunto cuando se usa PostgreSQL. */
     public void guardarEvidencia(String folio, EvidenciaCaso evidencia, SesionUsuario sesion) {

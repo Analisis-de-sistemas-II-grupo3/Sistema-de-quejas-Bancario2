@@ -13,7 +13,9 @@ public class AutenticacionInterceptor implements HandlerInterceptor {
     public boolean preHandle(HttpServletRequest solicitud, HttpServletResponse respuesta, Object manejador) throws Exception {
         HttpSession sesion = solicitud.getSession(false);
         if (sesion == null || sesion.getAttribute(ClaveSesion.CONTEXTO) == null) {
-            respuesta.sendRedirect(solicitud.getContextPath() + "/login");
+            // Si la sesión caducó, CU01 indica regresar al portal. Desde allí el
+            // usuario puede volver a iniciar sesión sin quedar en una pantalla rota.
+            respuesta.sendRedirect(solicitud.getContextPath() + "/?sesionExpirada=true");
             return false;
         }
         return true;

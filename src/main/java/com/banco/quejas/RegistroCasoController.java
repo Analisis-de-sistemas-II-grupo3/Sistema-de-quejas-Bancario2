@@ -51,7 +51,14 @@ public class RegistroCasoController {
             }
             modelo.addAttribute("caso", caso);
             return "caso-exito";
-        } catch (RegistroCasoException | ErrorEvidenciaException e) {
+        } catch (ErrorEvidenciaException e) {
+            // El navegador no permite volver a cargar automáticamente un archivo
+            // (por seguridad), pero todos los demás campos sí se conservan.
+            almacenAdjuntos.eliminar(documento);
+            modelo.addAttribute("errorEvidencia", e.getMessage());
+            modelo.addAttribute("mostrarPaso2", true);
+            return prepararFormulario(modelo, formulario, contexto == null ? null : contexto.cliente(), null);
+        } catch (RegistroCasoException e) {
             almacenAdjuntos.eliminar(documento);
             return prepararFormulario(modelo, formulario, contexto == null ? null : contexto.cliente(), e.getMessage());
         }
