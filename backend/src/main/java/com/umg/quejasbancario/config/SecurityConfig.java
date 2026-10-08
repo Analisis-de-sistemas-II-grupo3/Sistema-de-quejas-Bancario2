@@ -2,6 +2,7 @@ package com.umg.quejasbancario.config;
 
 import com.umg.quejasbancario.security.CustomUserDetailsService;
 import com.umg.quejasbancario.security.JwtAuthFilter;
+import com.umg.quejasbancario.security.PublicRateLimitFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -35,6 +36,7 @@ import java.util.List;
 public class SecurityConfig {
 
     private final JwtAuthFilter jwtAuthFilter;
+    private final PublicRateLimitFilter publicRateLimitFilter;
     private final CustomUserDetailsService userDetailsService;
     private final AppProperties appProperties;
 
@@ -65,6 +67,9 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Publico: autenticacion, recuperacion de contrasena
                 .requestMatchers("/api/auth/**").permitAll()
+                // Publico: Portal (CU-00) - identidad institucional (RN17) y
+                // consulta del estado de un caso sin iniciar sesion (CU-00 FA01 / CU-03)
+                .requestMatchers(HttpMethod.GET, "/api/publico/**").permitAll()
                 .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll()
                 .requestMatchers(HttpMethod.GET, "/api/catalogos/**").authenticated()
                 .requestMatchers("/uploads/**").authenticated()
@@ -100,6 +105,7 @@ public class SecurityConfig {
                 .anyRequest().authenticated()
             )
             .authenticationProvider(authenticationProvider())
+            .addFilterBefore(publicRateLimitFilter, UsernamePasswordAuthenticationFilter.class)
             .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();

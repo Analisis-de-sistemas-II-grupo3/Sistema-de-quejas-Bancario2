@@ -6,3 +6,6 @@ uploads/
 .vscode/
 .DS_Store
 application-local.yml
+.env
+.env.*
+!.env.example

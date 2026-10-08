@@ -51,7 +51,19 @@ function rutaLogin() {
            window.location.pathname.includes("/supervisor/") ||
            window.location.pathname.includes("/administrador/") ||
            window.location.pathname.includes("/auditor/")
-        ? "../index.html" : "index.html";
+        ? "../login.html" : "login.html";
+}
+
+/** Panel de destino segun el rol (usado por el login y por el Portal). */
+function rutaPanelPorRol(rol) {
+    switch (String(rol).toUpperCase()) {
+        case "CLIENTE": return "cliente/dashboard.html";
+        case "AGENTE": return "agente/dashboard.html";
+        case "SUPERVISOR": return "supervisor/dashboard.html";
+        case "ADMINISTRADOR": return "administrador/dashboard.html";
+        case "AUDITOR": return "auditor/dashboard.html";
+        default: return "login.html";
+    }
 }
 
 /**

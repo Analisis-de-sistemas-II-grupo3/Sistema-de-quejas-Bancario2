@@ -1,0 +1,6 @@
+.env
+.env.*
+!.env.example
+application-local.yml
+backend/target/
+backend/uploads/

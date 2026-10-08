@@ -14,4 +14,3 @@ public class QuejasBancarioApplication {
         SpringApplication.run(QuejasBancarioApplication.class, args);
     }
 }
-p

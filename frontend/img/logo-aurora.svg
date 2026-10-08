@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Logotipo: amanecer estilizado">
+  <defs>
+    <linearGradient id="sol" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#F7CF7A"/>
+      <stop offset="1" stop-color="#E8B04B"/>
+    </linearGradient>
+    <linearGradient id="mar" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#2CD0C7"/>
+      <stop offset="1" stop-color="#128C88"/>
+    </linearGradient>
+    <clipPath id="disco"><circle cx="32" cy="32" r="29"/></clipPath>
+  </defs>
+  <circle cx="32" cy="32" r="30" fill="#0B2545" stroke="#1AB8B0" stroke-width="2"/>
+  <g clip-path="url(#disco)">
+    <circle cx="32" cy="41" r="15" fill="#E8B04B" opacity=".18"/>
+    <path d="M20 41a12 12 0 0 1 24 0Z" fill="url(#sol)"/>
+    <g stroke="#E8B04B" stroke-width="2.4" stroke-linecap="round">
+    <line x1="16.99" y1="33.02" x2="11.69" y2="30.20"/>
+    <line x1="22.49" y1="26.91" x2="19.14" y2="21.93"/>
+    <line x1="32.00" y1="24.00" x2="32.00" y2="18.00"/>
+    <line x1="41.51" y1="26.91" x2="44.86" y2="21.93"/>
+    <line x1="47.01" y1="33.02" x2="52.31" y2="30.20"/>
+    </g>
+    <rect x="0" y="41" width="64" height="23" fill="url(#mar)"/>
+    <path d="M0 47c6-3 10 3 16 0s10-3 16 0 10 3 16 0 10-3 16 0" fill="none" stroke="#0B2545" stroke-opacity=".35" stroke-width="1.8" stroke-linecap="round"/>
+    <path d="M0 53c6-3 10 3 16 0s10-3 16 0 10 3 16 0 10-3 16 0" fill="none" stroke="#0B2545" stroke-opacity=".3" stroke-width="1.8" stroke-linecap="round"/>
+    <rect x="0" y="40" width="64" height="1.6" fill="#F7CF7A"/>
+  </g>
+</svg>

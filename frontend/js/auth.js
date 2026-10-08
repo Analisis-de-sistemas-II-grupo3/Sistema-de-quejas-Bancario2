@@ -6,17 +6,6 @@
     }
 })();
 
-function rutaPanelPorRol(rol) {
-    switch (rol.toUpperCase()) {
-        case "CLIENTE": return "cliente/dashboard.html";
-        case "AGENTE": return "agente/dashboard.html";
-        case "SUPERVISOR": return "supervisor/dashboard.html";
-        case "ADMINISTRADOR": return "administrador/dashboard.html";
-        case "AUDITOR": return "auditor/dashboard.html";
-        default: return "index.html";
-    }
-}
-
 document.getElementById("formLogin").addEventListener("submit", async (e) => {
     e.preventDefault();
     const nombreUsuario = document.getElementById("nombreUsuario").value.trim();

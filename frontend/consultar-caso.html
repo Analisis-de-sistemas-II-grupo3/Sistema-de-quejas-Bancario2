@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Consultar el estado de un caso</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+<link href="css/portal.css" rel="stylesheet">
+</head>
+<body class="portal identidad-cargando" data-titulo="Consultar caso">
+
+<div id="spinnerOverlay" class="spinner-overlay">
+    <div class="spinner-border" role="status"></div>
+</div>
+
+<!-- CU-00 FA01 / CU-03: consulta del estado de un caso sin iniciar sesión -->
+<nav class="navbar navbar-expand-lg portal-nav">
+    <div class="container">
+        <a class="navbar-brand" href="index.html">
+            <span class="brand-mark">
+                <img data-id="logo" alt="" hidden>
+                <i class="bi bi-bank2" data-id="logo-fallback"></i>
+            </span>
+            <span data-id="nombre">Sistema de Quejas Bancario</span>
+        </a>
+        <div class="d-flex gap-2">
+            <a class="btn btn-ghost btn-sm px-3" href="index.html"><i class="bi bi-house me-1"></i>Inicio</a>
+            <a class="btn btn-brand btn-sm px-3" href="login.html" data-accion="login"><i class="bi bi-box-arrow-in-right me-1"></i>Iniciar sesión</a>
+        </div>
+    </div>
+</nav>
+
+<header class="consulta-hero">
+    <div class="container text-center">
+        <h1>Consulte el estado de su caso</h1>
+        <p>Ingrese su número de caso para conocer en qué etapa se encuentra. No necesita iniciar sesión.</p>
+    </div>
+</header>
+
+<main class="consulta-panel">
+    <div class="container" style="max-width: 46rem;">
+        <div class="consulta-card">
+            <div id="alertas"></div>
+            <form id="formConsulta" novalidate>
+                <label class="form-label fw-semibold" for="numeroCaso">Número de caso</label>
+                <div class="input-group input-group-lg">
+                    <input type="text" class="form-control" id="numeroCaso" placeholder="Q-00001-2026"
+                           maxlength="20" autocomplete="off" autofocus>
+                    <button type="submit" class="btn btn-brand-solid px-4"><i class="bi bi-search me-2"></i>Consultar</button>
+                </div>
+                <div class="form-text mt-2">
+                    El número tiene el formato <strong>Q-00001-2026</strong> (Q: Queja, R: Reclamo, D: Denuncia, S: Sugerencia)
+                    y lo recibió por correo al registrar su caso.
+                </div>
+            </form>
+
+            <section class="resultado-caso" id="resultado" hidden>
+                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+                    <div>
+                        <div class="dato-label">Número de caso</div>
+                        <div class="numero" id="resNumero"></div>
+                    </div>
+                    <span class="estado-pill" id="resEstado"></span>
+                </div>
+
+                <div class="row g-3 mb-2">
+                    <div class="col-sm-4"><div class="dato-label">Tipo de caso</div><div class="dato-valor" id="resTipo"></div></div>
+                    <div class="col-sm-4"><div class="dato-label">Fecha de registro</div><div class="dato-valor" id="resRegistro"></div></div>
+                    <div class="col-sm-4"><div class="dato-label">Última actualización</div><div class="dato-valor" id="resActualizacion"></div></div>
+                </div>
+
+                <div class="stepper" id="stepper" aria-label="Progreso del caso"></div>
+                <div class="nota-espera" id="notaEspera" hidden>
+                    <i class="bi bi-pause-circle me-1"></i>Su caso está en espera, por ejemplo mientras se obtiene información adicional.
+                </div>
+
+                <h2 class="h6 fw-bold mt-4 mb-0" style="color: var(--brand-primary)">Historial de estados</h2>
+                <ul class="etapas" id="etapas"></ul>
+            </section>
+        </div>
+    </div>
+</main>
+
+<footer class="portal-footer">
+    <div class="container text-center">
+        <strong data-id="nombre">Sistema de Quejas Bancario</strong>
+        <span class="acento ms-2" data-id="eslogan" hidden></span>
+    </div>
+</footer>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="js/api.js"></script>
+<script src="js/identidad.js"></script>
+<script src="js/consultar-caso.js"></script>
+</body>
+</html>
