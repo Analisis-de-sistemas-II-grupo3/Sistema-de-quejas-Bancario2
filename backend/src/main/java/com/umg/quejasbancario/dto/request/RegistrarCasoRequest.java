@@ -1,5 +1,7 @@
 package com.umg.quejasbancario.dto.request;
 
+import com.umg.quejasbancario.validation.DpiNit;
+import com.umg.quejasbancario.validation.TelefonoNumerico;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
@@ -21,13 +23,15 @@ public class RegistrarCasoRequest {
     private String nombreCliente;
 
     @NotBlank(message = "El DPI/NIT del cliente es obligatorio")
+    @DpiNit
     private String identificacionCliente;
 
     @NotBlank(message = "El correo electronico es obligatorio")
-    @Email(message = "El correo electronico ingresado no tiene un formato valido")
+    @Email(message = "Por favor verifique, el correo electrónico ingresado no tiene un formato válido.")
     private String correoContacto;
 
-    private String telefonoContacto; // Opcional
+    @TelefonoNumerico
+    private String telefonoContacto; // Opcional, pero si se ingresa debe tener formato válido
 
     private Integer idProducto; // Opcional (producto/servicio asociado)
 

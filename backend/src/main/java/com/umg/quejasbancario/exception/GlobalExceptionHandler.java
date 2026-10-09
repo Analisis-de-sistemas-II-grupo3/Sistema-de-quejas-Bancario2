@@ -67,7 +67,15 @@ public class GlobalExceptionHandler {
         List<String> detalles = ex.getBindingResult().getFieldErrors().stream()
                 .map(fe -> fe.getField() + ": " + fe.getDefaultMessage())
                 .toList();
-        return build(HttpStatus.BAD_REQUEST, "Por favor ingrese los campos obligatorios.", detalles);
+        // AN02 #7 si el unico problema es el formato del correo; en cualquier otro caso AN02 #1.
+        boolean hayObligatorioFaltante = ex.getBindingResult().getFieldErrors().stream()
+                .anyMatch(fe -> "NotBlank".equals(fe.getCode()) || "NotNull".equals(fe.getCode()));
+        boolean soloCorreoInvalido = !hayObligatorioFaltante && ex.getBindingResult().getFieldErrors().stream()
+                .allMatch(fe -> "correoContacto".equals(fe.getField()) && "Email".equals(fe.getCode()));
+        String mensaje = soloCorreoInvalido
+                ? "Por favor verifique, el correo electrónico ingresado no tiene un formato válido."
+                : "Por favor ingrese los campos obligatorios.";
+        return build(HttpStatus.BAD_REQUEST, mensaje, detalles);
     }
 
     @ExceptionHandler(Exception.class)
