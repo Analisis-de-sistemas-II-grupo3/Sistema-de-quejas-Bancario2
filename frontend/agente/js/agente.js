@@ -103,7 +103,6 @@ async function accionCaso(accion) {
     try {
         const resp = await apiFetch(`/casos/${idCasoActual}/${accion}`, { method: "POST" });
         bootstrap.Modal.getInstance(document.getElementById("modalDetalle")).hide();
-        mostrarAlerta("alertas", resp.mensaje, "success");
         cargarBandeja();
     } catch (err) {
         mostrarAlerta("alertas", err.message);
@@ -121,7 +120,7 @@ function abrirModalResolver() {
 async function confirmarResolver() {
     const detalleResolucion = document.getElementById("detalleResolucion").value.trim();
     if (!detalleResolucion) {
-        mostrarAlerta("alertasResolver", "Por favor ingrese el detalle de la resolución.");
+        mostrarAlerta("alertasResolver", "Por favor ingrese los campos obligatorios.");
         return;
     }
     mostrarCargando(true);
@@ -129,7 +128,6 @@ async function confirmarResolver() {
         const resp = await apiFetch(`/casos/${idCasoActual}/resolver`, { method: "POST", body: { detalleResolucion } });
         bootstrap.Modal.getInstance(document.getElementById("modalResolver")).hide();
         bootstrap.Modal.getInstance(document.getElementById("modalDetalle"))?.hide();
-        mostrarAlerta("alertas", resp.mensaje, "success");
         cargarBandeja();
     } catch (err) {
         mostrarAlerta("alertasResolver", err.message);
@@ -147,7 +145,7 @@ function abrirModalReasignar() {
 async function confirmarReasignacion() {
     const motivo = document.getElementById("motivoReasignacion").value.trim();
     if (!motivo) {
-        mostrarAlerta("alertasReasignar", "Por favor ingrese el motivo de la reasignación.");
+        mostrarAlerta("alertasReasignar", "Por favor ingrese los campos obligatorios.");
         return;
     }
     mostrarCargando(true);
@@ -155,7 +153,6 @@ async function confirmarReasignacion() {
         await apiFetch(`/reasignaciones/casos/${idCasoActual}/solicitar`, { method: "POST", body: { motivo } });
         bootstrap.Modal.getInstance(document.getElementById("modalReasignar")).hide();
         bootstrap.Modal.getInstance(document.getElementById("modalDetalle"))?.hide();
-        mostrarAlerta("alertas", "Su solicitud de reasignación fue enviada al Supervisor.", "success");
         cargarBandeja();
     } catch (err) {
         mostrarAlerta("alertasReasignar", err.message);

@@ -52,7 +52,6 @@ async function crearUsuario() {
         await apiFetch("/usuarios", { method: "POST", body: request });
         bootstrap.Modal.getInstance(document.getElementById("modalUsuario")).hide();
         document.getElementById("formUsuario").reset();
-        mostrarAlerta("alertas", "Usuario creado correctamente. Se envió un correo con sus credenciales.", "success");
         cargarUsuarios();
     } catch (err) {
         mostrarAlerta("alertasUsuario", err.message);
@@ -146,7 +145,6 @@ async function guardarParametro(idParametro) {
     mostrarCargando(true);
     try {
         await apiFetch(`/parametros/${idParametro}`, { method: "PUT", body: { valor } });
-        mostrarAlerta("alertas", "Parámetro actualizado correctamente.", "success");
     } catch (err) {
         mostrarAlerta("alertas", err.message);
     } finally {

@@ -11,7 +11,8 @@ async function cargarSolicitudes() {
     try {
         const solicitudes = await apiFetch("/reasignaciones/pendientes");
         if (solicitudes.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No hay solicitudes pendientes.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted">No existen solicitudes de reasignación pendientes de aprobación.</td></tr>`;
+            Notificar.mostrar("No existen solicitudes de reasignación pendientes de aprobación.", "info");
             return;
         }
         tbody.innerHTML = solicitudes.map(s => `
@@ -35,7 +36,6 @@ async function aprobar(idSolicitud) {
     mostrarCargando(true);
     try {
         await apiFetch(`/reasignaciones/${idSolicitud}/aprobar`, { method: "POST" });
-        mostrarAlerta("alertas", "La solicitud fue aprobada y el caso fue reasignado automáticamente.", "success");
         cargarSolicitudes();
     } catch (err) {
         mostrarAlerta("alertas", err.message);
@@ -56,7 +56,6 @@ async function confirmarRechazo() {
     try {
         await apiFetch(`/reasignaciones/${idSolicitudActual}/rechazar`, { method: "POST", body: { motivoRechazo } });
         bootstrap.Modal.getInstance(document.getElementById("modalRechazar")).hide();
-        mostrarAlerta("alertas", "La solicitud fue rechazada.", "success");
         cargarSolicitudes();
     } catch (err) {
         mostrarAlerta("alertas", err.message);
@@ -89,7 +88,9 @@ async function buscarCasos() {
     try {
         const casos = await apiFetch("/casos/buscar?" + construirQuery().toString());
         if (casos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No se encontraron casos con los filtros indicados.</td></tr>`;
+            const sinResultados = "No se encontraron casos con los criterios de búsqueda indicados.";   // AN02 #22
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">${sinResultados}</td></tr>`;
+            Notificar.mostrar(sinResultados, "info");
             return;
         }
         tbody.innerHTML = casos.map(c => `

@@ -4,6 +4,115 @@
  */
 const API_BASE_URL = window.API_BASE_URL || "http://localhost:8080/api";
 
+/* =====================================================================
+ * Notificaciones (mensajes AN01 de exito / AN02 de error de las Reglas de Negocio)
+ *  - Notificar.mostrar(): notificacion flotante SIEMPRE visible (queda por encima de
+ *    cualquier modal, no depende de la posicion del scroll).
+ *  - Flash: guarda mensajes en sessionStorage para mostrarlos en la pagina siguiente
+ *    (p.ej. "Inicio de sesion exitoso" justo antes de redirigir al panel).
+ *  - apiFetch muestra automaticamente los mensajes de exito que envia el backend
+ *    en la cabecera X-Mensaje (ver util/Mensajes.java).
+ * ===================================================================== */
+const Notificar = (() => {
+    const ICONOS = {
+        success: "bi-check-circle-fill",
+        danger: "bi-exclamation-octagon-fill",
+        warning: "bi-exclamation-triangle-fill",
+        info: "bi-info-circle-fill"
+    };
+    let contenedor = null;
+
+    function inyectarEstilos() {
+        if (document.getElementById("qbToastEstilos")) return;
+        const st = document.createElement("style");
+        st.id = "qbToastEstilos";
+        st.textContent = `
+#qbToasts{position:fixed;top:1rem;left:50%;transform:translateX(-50%);z-index:2000;display:flex;flex-direction:column;gap:.6rem;width:min(540px,92vw);pointer-events:none}
+.qb-toast{pointer-events:auto;display:flex;align-items:flex-start;gap:.7rem;padding:.8rem 1rem;border-radius:.8rem;border-left:6px solid;box-shadow:0 10px 30px rgba(0,0,0,.18);font-size:.95rem;line-height:1.35;animation:qbIn .25s ease-out}
+.qb-toast i{font-size:1.2rem;margin-top:.05rem}
+.qb-toast .qb-txt{flex:1;word-break:break-word}
+.qb-toast button{border:0;background:transparent;font-size:1.3rem;line-height:1;cursor:pointer;opacity:.6;color:inherit;padding:0 .2rem}
+.qb-toast button:hover{opacity:1}
+.qb-toast.success{background:#dff3ea;color:#14744f;border-color:#14744f}
+.qb-toast.danger{background:#fbe3e7;color:#8f2438;border-color:#c0334d}
+.qb-toast.warning{background:#fff3cd;color:#664d03;border-color:#e0a800}
+.qb-toast.info{background:#dbeafe;color:#1e40af;border-color:#3b82f6}
+@keyframes qbIn{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}`;
+        document.head.appendChild(st);
+    }
+
+    function asegurarContenedor() {
+        if (contenedor && document.body.contains(contenedor)) return contenedor;
+        inyectarEstilos();
+        contenedor = document.createElement("div");
+        contenedor.id = "qbToasts";
+        contenedor.setAttribute("aria-live", "polite");
+        document.body.appendChild(contenedor);
+        return contenedor;
+    }
+
+    function mostrar(mensaje, tipo = "success", ms) {
+        if (!mensaje) return;
+        if (!document.body) {
+            document.addEventListener("DOMContentLoaded", () => mostrar(mensaje, tipo, ms));
+            return;
+        }
+        const lista = asegurarContenedor();
+        while (lista.children.length >= 5) lista.removeChild(lista.firstChild);
+
+        const toast = document.createElement("div");
+        toast.className = "qb-toast " + (ICONOS[tipo] ? tipo : "info");
+        toast.setAttribute("role", tipo === "danger" ? "alert" : "status");
+
+        const icono = document.createElement("i");
+        icono.className = "bi " + (ICONOS[tipo] || ICONOS.info);
+        const texto = document.createElement("span");
+        texto.className = "qb-txt";
+        texto.textContent = mensaje;               // textContent: nunca interpreta HTML
+        const cerrar = document.createElement("button");
+        cerrar.type = "button";
+        cerrar.setAttribute("aria-label", "Cerrar");
+        cerrar.innerHTML = "&times;";
+        cerrar.addEventListener("click", () => toast.remove());
+
+        toast.append(icono, texto, cerrar);
+        lista.appendChild(toast);
+        setTimeout(() => toast.remove(), ms || (tipo === "success" ? 6000 : 9000));
+    }
+
+    return { mostrar };
+})();
+
+const Flash = {
+    guardar(mensajes, tipo = "success") {
+        if (!mensajes || !mensajes.length) return;
+        try { sessionStorage.setItem("qb_flash", JSON.stringify({ mensajes, tipo })); } catch (e) { /* sin storage */ }
+    },
+    mostrarPendiente() {
+        try {
+            const raw = sessionStorage.getItem("qb_flash");
+            if (!raw) return;
+            sessionStorage.removeItem("qb_flash");
+            const f = JSON.parse(raw);
+            (f.mensajes || []).forEach(m => Notificar.mostrar(m, f.tipo || "success"));
+        } catch (e) { /* ignorar */ }
+    }
+};
+if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", () => Flash.mostrarPendiente());
+} else {
+    Flash.mostrarPendiente();
+}
+
+/** Lee los mensajes AN01 que envia el backend en la cabecera X-Mensaje. */
+function mensajesDeRespuesta(respuesta) {
+    const crudo = respuesta.headers.get("X-Mensaje");
+    if (!crudo) return [];
+    return crudo.split(",").map(m => {
+        try { return decodeURIComponent(m); } catch (e) { return m; }
+    }).filter(Boolean);
+}
+
 const Sesion = {
     guardar(login) {
         localStorage.setItem("qb_token", login.token);
@@ -89,7 +198,7 @@ async function apiFetch(path, opciones = {}) {
         throw new Error("No fue posible conectar con el servidor. Verifique su conexión o que el backend esté en ejecución.");
     }
 
-    if (respuesta.status === 401) {
+    if (respuesta.status === 401 && !path.startsWith("/auth/login")) {
         Sesion.limpiar();
         window.location.href = rutaLogin();
         throw new Error("Su sesión expiró. Por favor inicie sesión nuevamente.");
@@ -104,6 +213,14 @@ async function apiFetch(path, opciones = {}) {
             if (data && data.mensaje) mensaje = data.mensaje;
         }
         throw new Error(mensaje);
+    }
+
+    if (!opciones.raw) {
+        // AN01: el backend informa el resultado de la accion en la cabecera X-Mensaje.
+        // opciones.flash = true -> se muestra en la pagina siguiente (cuando se redirige justo despues).
+        const mensajes = mensajesDeRespuesta(respuesta);
+        if (opciones.flash) Flash.guardar(mensajes, "success");
+        else mensajes.forEach(m => Notificar.mostrar(m, "success"));
     }
 
     if (opciones.raw) return respuesta; // para descargas binarias (blob)
@@ -136,13 +253,27 @@ function mostrarCargando(activo) {
     if (overlay) overlay.classList.toggle("activo", activo);
 }
 
+/**
+ * Muestra un mensaje (normalmente AN02 de error). Si el contenedor esta DENTRO de un modal el
+ * mensaje se muestra ahi mismo; en cualquier otro caso se muestra como notificacion flotante,
+ * visible aunque haya un modal abierto o la pagina este desplazada.
+ */
 function mostrarAlerta(contenedorId, mensaje, tipo = "danger") {
-    const contenedor = document.getElementById(contenedorId);
-    if (!contenedor) { alert(mensaje); return; }
-    contenedor.innerHTML = `<div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
-        ${mensaje}
-        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
-    </div>`;
+    const contenedor = contenedorId ? document.getElementById(contenedorId) : null;
+    if (contenedor && contenedor.closest(".modal")) {
+        const alerta = document.createElement("div");
+        alerta.className = `alert alert-${tipo} alert-dismissible fade show`;
+        alerta.setAttribute("role", "alert");
+        alerta.appendChild(document.createTextNode(mensaje));
+        const cerrar = document.createElement("button");
+        cerrar.type = "button";
+        cerrar.className = "btn-close";
+        cerrar.setAttribute("data-bs-dismiss", "alert");
+        alerta.appendChild(cerrar);
+        contenedor.replaceChildren(alerta);
+        return;
+    }
+    Notificar.mostrar(mensaje, tipo);
 }
 
 function badgeEstado(estado) {

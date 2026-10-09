@@ -42,7 +42,8 @@ async function cargarMisCasos() {
     try {
         const casos = await apiFetch("/casos/mis-casos");
         if (casos.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">Aún no ha registrado ningún caso.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="6" class="text-center text-muted">No cuenta con casos registrados.</td></tr>`;
+            Notificar.mostrar("No cuenta con casos registrados.", "info");   // AN02 #18 (mensaje informativo, CU-03)
             return;
         }
         tbody.innerHTML = casos.map(c => `
@@ -117,10 +118,10 @@ document.getElementById("formRegistrarCaso").addEventListener("submit", async (e
 
     mostrarCargando(true);
     try {
-        const caso = await apiFetch("/casos/registrar", { method: "POST", body: formData });
+        await apiFetch("/casos/registrar", { method: "POST", body: formData });
         document.getElementById("formRegistrarCaso").reset();
         mostrarSeccion("seccionMisCasos");
-        mostrarAlerta("alertas", `Su caso fue registrado con éxito. Número de caso: <strong>${caso.numeroCaso}</strong>.`, "success");
+        // AN01 #1 (con el numero de caso) lo muestra apiFetch automaticamente.
     } catch (err) {
         mostrarAlerta("alertasRegistrar", err.message);
     } finally {

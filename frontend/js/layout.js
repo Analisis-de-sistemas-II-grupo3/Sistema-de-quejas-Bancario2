@@ -71,7 +71,7 @@ function renderNavbar(idContenedor, titulo, enlaces, descripcion) {
 
 async function cerrarSesion() {
     try {
-        await apiFetch("/auth/logout", { method: "POST" });
+        await apiFetch("/auth/logout", { method: "POST", flash: true });   // AN01 #11 se muestra en la pagina de inicio
     } catch (e) {
         // Continuamos con el cierre local aunque falle la llamada al backend.
     } finally {

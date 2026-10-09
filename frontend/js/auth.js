@@ -15,7 +15,8 @@ document.getElementById("formLogin").addEventListener("submit", async (e) => {
     try {
         const login = await apiFetch("/auth/login", {
             method: "POST",
-            body: { nombreUsuario, contrasena }
+            body: { nombreUsuario, contrasena },
+            flash: true     // AN01 #10 se muestra ya dentro del panel
         });
         Sesion.guardar(login);
         window.location.href = rutaPanelPorRol(login.rol);
