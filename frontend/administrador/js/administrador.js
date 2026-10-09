@@ -2,7 +2,7 @@ const usuario = Sesion.exigirRol("ADMINISTRADOR");
 
 renderNavbar("navbar", "Panel de Administración", [
     { texto: "Administración", href: "#", activo: true }
-]);
+], "Gestione usuarios, catálogos y parámetros del sistema.");
 
 // ---------------- Usuarios (CU-14) ----------------
 

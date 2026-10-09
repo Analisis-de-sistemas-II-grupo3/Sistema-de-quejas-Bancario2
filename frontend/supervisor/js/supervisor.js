@@ -3,7 +3,7 @@ let idSolicitudActual = null;
 
 renderNavbar("navbar", "Panel del Supervisor", [
     { texto: "Solicitudes y Reportes", href: "#", activo: true }
-]);
+], "Revise solicitudes de reasignación, busque casos y genere reportes.");
 
 async function cargarSolicitudes() {
     const tbody = document.getElementById("tablaSolicitudes");

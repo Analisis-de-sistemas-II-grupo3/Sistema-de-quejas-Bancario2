@@ -3,7 +3,7 @@ let idCasoActual = null;
 
 renderNavbar("navbar", "Portal del Agente", [
     { texto: "Mi Bandeja", href: "#", activo: true }
-]);
+], "Atienda los casos que le asignaron y mantenga su estado al día.");
 
 async function cargarBandeja() {
     const tbody = document.getElementById("tablaBandeja");

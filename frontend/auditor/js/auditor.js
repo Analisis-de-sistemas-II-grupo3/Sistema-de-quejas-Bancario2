@@ -3,7 +3,7 @@ let tabActiva = "casos";
 
 renderNavbar("navbar", "Panel del Auditor", [
     { texto: "Bitácoras del Sistema", href: "#", activo: true }
-]);
+], "Consulte las bitácoras de casos, accesos, usuarios y correos.");
 
 function filtrosBase() {
     const params = new URLSearchParams();

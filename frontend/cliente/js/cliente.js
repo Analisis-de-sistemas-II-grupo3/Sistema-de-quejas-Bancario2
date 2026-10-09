@@ -2,7 +2,7 @@ const usuario = Sesion.exigirRol("CLIENTE");
 
 renderNavbar("navbar", "Portal del Cliente", [
     { texto: "Mis Casos", href: "#", activo: true }
-]);
+], "Registre un caso y siga su avance hasta que se resuelva.");
 
 function mostrarSeccion(idSeccion) {
     document.getElementById("seccionMisCasos").style.display = idSeccion === "seccionMisCasos" ? "block" : "none";
