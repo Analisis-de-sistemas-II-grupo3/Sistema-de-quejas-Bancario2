@@ -8,6 +8,7 @@ import com.umg.quejasbancario.exception.AccesoDenegadoException;
 import com.umg.quejasbancario.exception.BusinessRuleException;
 import com.umg.quejasbancario.exception.ResourceNotFoundException;
 import com.umg.quejasbancario.repository.CasoRepository;
+import com.umg.quejasbancario.util.Mensajes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,13 +28,16 @@ public class AtencionService {
     private final BitacoraRegistroService bitacoraRegistroService;
     private final NotificacionService notificacionService;
 
+    /** Resultado de una transicion de estado; el controller lo usa para armar el mensaje AN01. */
+    public record CambioEstado(String numeroCaso, String estadoAnterior, String estadoNuevo) {}
+
     /** CU-07 Iniciar Atencion de Caso. */
     @Transactional
-    public void iniciarAtencion(Integer idCaso, Usuario agente, String ip) {
+    public CambioEstado iniciarAtencion(Integer idCaso, Usuario agente, String ip) {
         Caso caso = obtenerCasoDelAgente(idCaso, agente);
 
         if (caso.getEstado() != EstadoCaso.ASIGNADO && caso.getEstado() != EstadoCaso.EN_ESPERA) {
-            throw new BusinessRuleException("El caso no se encuentra en un estado válido para iniciar su atención.");
+            throw new BusinessRuleException(Mensajes.AN02_21);
         }
 
         String estadoAnterior = caso.getEstado().getValor();
@@ -45,15 +49,16 @@ public class AtencionService {
                 "El Agente '" + agente.getNombreCompleto() + "' inició la atención del caso.");
 
         notificacionService.notificarCambioEstado(caso, caso.getCorreoContacto(), estadoAnterior, EstadoCaso.EN_ATENCION.getValor());
+        return new CambioEstado(caso.getNumeroCaso(), estadoAnterior, EstadoCaso.EN_ATENCION.getValor());
     }
 
     /** Poner el caso "En espera" (p.ej. mientras se espera informacion adicional del cliente). */
     @Transactional
-    public void ponerEnEspera(Integer idCaso, Usuario agente, String motivo, String ip) {
+    public CambioEstado ponerEnEspera(Integer idCaso, Usuario agente, String motivo, String ip) {
         Caso caso = obtenerCasoDelAgente(idCaso, agente);
 
         if (caso.getEstado() != EstadoCaso.EN_ATENCION) {
-            throw new BusinessRuleException("Solo se puede poner en espera un caso que se encuentra En atención.");
+            throw new BusinessRuleException(Mensajes.AN02_21);
         }
 
         String estadoAnterior = caso.getEstado().getValor();
@@ -66,18 +71,19 @@ public class AtencionService {
                 estadoAnterior, EstadoCaso.EN_ESPERA.getValor(), descripcion);
 
         notificacionService.notificarCambioEstado(caso, caso.getCorreoContacto(), estadoAnterior, EstadoCaso.EN_ESPERA.getValor());
+        return new CambioEstado(caso.getNumeroCaso(), estadoAnterior, EstadoCaso.EN_ESPERA.getValor());
     }
 
     /** CU-08 Resolver Caso. */
     @Transactional
-    public void resolverCaso(Integer idCaso, Usuario agente, String detalleResolucion, String ip) {
+    public CambioEstado resolverCaso(Integer idCaso, Usuario agente, String detalleResolucion, String ip) {
         Caso caso = obtenerCasoDelAgente(idCaso, agente);
 
         if (caso.getEstado() != EstadoCaso.EN_ATENCION && caso.getEstado() != EstadoCaso.EN_ESPERA) {
-            throw new BusinessRuleException("El caso debe encontrarse En atención o En espera para poder resolverse.");
+            throw new BusinessRuleException(Mensajes.AN02_21);
         }
         if (detalleResolucion == null || detalleResolucion.isBlank()) {
-            throw new BusinessRuleException("Por favor ingrese los campos obligatorios.");
+            throw new BusinessRuleException(Mensajes.AN02_01);
         }
 
         String estadoAnterior = caso.getEstado().getValor();
@@ -90,11 +96,12 @@ public class AtencionService {
                 "El Agente '" + agente.getNombreCompleto() + "' registró la resolución del caso.");
 
         notificacionService.notificarCasoResuelto(caso, caso.getCorreoContacto());
+        return new CambioEstado(caso.getNumeroCaso(), estadoAnterior, EstadoCaso.RESUELTO.getValor());
     }
 
     /** CU-09 Cerrar Caso. Puede ejecutarlo el Agente responsable o el Administrador/Supervisor. */
     @Transactional
-    public void cerrarCaso(Integer idCaso, Usuario usuarioEjecuta, String ip) {
+    public CambioEstado cerrarCaso(Integer idCaso, Usuario usuarioEjecuta, String ip) {
         Caso caso = casoRepository.findById(idCaso)
                 .orElseThrow(() -> new ResourceNotFoundException("Por favor verifique, el número de caso no existe en el sistema."));
 
@@ -108,8 +115,13 @@ public class AtencionService {
             throw new AccesoDenegadoException("No tiene autorización para cerrar este caso.");
         }
 
+        // AN02 #6: el caso ya estaba Cerrado.
+        if (caso.getEstado() == EstadoCaso.CERRADO) {
+            throw new BusinessRuleException(Mensajes.AN02_06);
+        }
+
         if (caso.getEstado() != EstadoCaso.RESUELTO) {
-            throw new BusinessRuleException("Solo se pueden cerrar casos que se encuentren en estado Resuelto.");
+            throw new BusinessRuleException(Mensajes.AN02_21);
         }
 
         String estadoAnterior = caso.getEstado().getValor();
@@ -122,6 +134,7 @@ public class AtencionService {
                 "'" + usuarioEjecuta.getNombreCompleto() + "' cerró formalmente el caso.");
 
         notificacionService.notificarCasoCerrado(caso, caso.getCorreoContacto());
+        return new CambioEstado(caso.getNumeroCaso(), estadoAnterior, EstadoCaso.CERRADO.getValor());
     }
 
     private Caso obtenerCasoDelAgente(Integer idCaso, Usuario agente) {
@@ -130,6 +143,10 @@ public class AtencionService {
 
         if (caso.getAgenteAsignado() == null || !caso.getAgenteAsignado().getIdUsuario().equals(agente.getIdUsuario())) {
             throw new AccesoDenegadoException("No tiene autorización para gestionar este caso.");
+        }
+        // AN02 #6: ninguna accion es posible sobre un caso Cerrado.
+        if (caso.getEstado() == EstadoCaso.CERRADO) {
+            throw new BusinessRuleException(Mensajes.AN02_06);
         }
         return caso;
     }

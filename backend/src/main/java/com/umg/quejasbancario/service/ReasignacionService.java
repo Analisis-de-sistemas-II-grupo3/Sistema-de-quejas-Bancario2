@@ -13,12 +13,14 @@ import com.umg.quejasbancario.exception.ResourceNotFoundException;
 import com.umg.quejasbancario.repository.CasoRepository;
 import com.umg.quejasbancario.repository.SolicitudReasignacionRepository;
 import com.umg.quejasbancario.repository.UsuarioRepository;
+import com.umg.quejasbancario.util.Mensajes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * CU-05 Solicitar Reasignacion de Caso, CU-06 Aprobar/Rechazar Solicitud de
@@ -48,21 +50,24 @@ public class ReasignacionService {
             throw new AccesoDenegadoException("No tiene autorización para solicitar la reasignación de este caso.");
         }
 
-        if (caso.getEstado() == EstadoCaso.RESUELTO || caso.getEstado() == EstadoCaso.CERRADO) {
-            throw new BusinessRuleException("No es posible solicitar la reasignación de un caso Resuelto o Cerrado.");
+        if (caso.getEstado() == EstadoCaso.CERRADO) {
+            throw new BusinessRuleException(Mensajes.AN02_06);
+        }
+        if (caso.getEstado() == EstadoCaso.RESUELTO) {
+            throw new BusinessRuleException(Mensajes.AN02_21);
         }
 
         if (solicitudReasignacionRepository.findByCaso_IdCasoAndEstado(idCaso, EstadoSolicitudReasignacion.PENDIENTE).isPresent()) {
-            throw new BusinessRuleException("Este caso ya tiene una solicitud de reasignación pendiente de aprobación.");
+            throw new BusinessRuleException(Mensajes.AN02_08);
         }
 
         // RN07: maximo 2 solicitudes de reasignacion por caso.
         if (caso.getSolicitudesReasignacionUsadas() != null && caso.getSolicitudesReasignacionUsadas() >= MAX_SOLICITUDES_POR_CASO) {
-            throw new BusinessRuleException("Este caso ya alcanzó el número máximo de solicitudes de reasignación permitidas.");
+            throw new BusinessRuleException(Mensajes.AN02_19);
         }
 
         if (motivo == null || motivo.isBlank()) {
-            throw new BusinessRuleException("Por favor ingrese los campos obligatorios.");
+            throw new BusinessRuleException(Mensajes.AN02_01);
         }
 
         SolicitudReasignacion solicitud = SolicitudReasignacion.builder()
@@ -100,6 +105,13 @@ public class ReasignacionService {
         Caso caso = solicitud.getCaso();
         Usuario agenteOriginal = solicitud.getAgenteSolicita();
 
+        // RN06/CU-04: nueva asignacion aleatoria excluyendo al agente original. Se hace PRIMERO: si no hay
+        // agentes disponibles se lanza AN02 #4 y no se modifica nada (la solicitud sigue pendiente).
+        Optional<Usuario> nuevoAgente = asignacionService.asignarCaso(caso, agenteOriginal, ip);
+        if (nuevoAgente.isEmpty()) {
+            throw new BusinessRuleException(Mensajes.AN02_04);
+        }
+
         solicitud.setEstado(EstadoSolicitudReasignacion.APROBADA);
         solicitud.setSupervisorResuelve(supervisor);
         solicitud.setFechaResolucion(LocalDateTime.now());
@@ -107,15 +119,11 @@ public class ReasignacionService {
 
         caso.setSolicitudesReasignacionUsadas(
                 (caso.getSolicitudesReasignacionUsadas() == null ? 0 : caso.getSolicitudesReasignacionUsadas()) + 1);
-        caso.setAgenteAsignado(null);
         casoRepository.save(caso);
 
         bitacoraRegistroService.registrarEventoCaso(caso, supervisor, RolNombre.SUPERVISOR.getValor(), ip,
                 caso.getEstado().getValor(), caso.getEstado().getValor(),
                 "El Supervisor '" + supervisor.getNombreCompleto() + "' aprobó la solicitud de reasignación.");
-
-        // RN06/CU-04: nueva asignacion aleatoria excluyendo al agente original.
-        asignacionService.asignarCaso(caso, agenteOriginal, ip);
 
         notificacionService.notificarReasignacionAprobada(caso, agenteOriginal.getCorreoElectronico(), agenteOriginal.getNombreCompleto());
 
@@ -160,6 +168,7 @@ public class ReasignacionService {
                 .motivo(s.getMotivo())
                 .motivoRechazo(s.getMotivoRechazo())
                 .estado(s.getEstado().getValor())
+                .agenteActual(s.getCaso().getAgenteAsignado() != null ? s.getCaso().getAgenteAsignado().getNombreCompleto() : null)
                 .fechaSolicitud(s.getFechaSolicitud())
                 .fechaResolucion(s.getFechaResolucion())
                 .build();

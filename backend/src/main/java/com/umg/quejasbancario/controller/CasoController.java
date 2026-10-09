@@ -9,7 +9,9 @@ import com.umg.quejasbancario.security.CustomUserDetails;
 import com.umg.quejasbancario.service.AtencionService;
 import com.umg.quejasbancario.service.CasoService;
 import com.umg.quejasbancario.util.IpUtil;
+import com.umg.quejasbancario.util.Mensajes;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -37,8 +39,11 @@ public class CasoController {
     public CasoDetalleResponse registrarCaso(@Valid @ModelAttribute RegistrarCasoRequest request,
                                               @RequestParam(value = "archivo", required = false) MultipartFile archivo,
                                               @AuthenticationPrincipal CustomUserDetails principal,
-                                              HttpServletRequest httpRequest) {
-        return casoService.registrarCaso(request, archivo, principal.getUsuario(), IpUtil.obtenerIp(httpRequest));
+                                              HttpServletRequest httpRequest,
+                                              HttpServletResponse respuesta) {
+        CasoDetalleResponse caso = casoService.registrarCaso(request, archivo, principal.getUsuario(), IpUtil.obtenerIp(httpRequest));
+        Mensajes.enviar(respuesta, Mensajes.casoRegistrado(caso.getNumeroCaso()));   // AN01 #1 (CU-02 paso 15)
+        return caso;
     }
 
     @GetMapping("/mis-casos")
@@ -86,32 +91,47 @@ public class CasoController {
 
     @PostMapping("/{id}/iniciar-atencion")
     @PreAuthorize("hasRole('AGENTE')")
-    public MessageResponse iniciarAtencion(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails principal, HttpServletRequest httpRequest) {
-        atencionService.iniciarAtencion(id, principal.getUsuario(), IpUtil.obtenerIp(httpRequest));
-        return MessageResponse.of("Se inició la atención del caso.");
+    public MessageResponse iniciarAtencion(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails principal,
+                                           HttpServletRequest httpRequest, HttpServletResponse respuesta) {
+        AtencionService.CambioEstado cambio = atencionService.iniciarAtencion(id, principal.getUsuario(), IpUtil.obtenerIp(httpRequest));
+        return exitoCambioEstado(respuesta, cambio);
     }
 
     @PostMapping("/{id}/poner-en-espera")
     @PreAuthorize("hasRole('AGENTE')")
     public MessageResponse ponerEnEspera(@PathVariable Integer id, @RequestBody(required = false) Map<String, String> body,
-                                          @AuthenticationPrincipal CustomUserDetails principal, HttpServletRequest httpRequest) {
+                                          @AuthenticationPrincipal CustomUserDetails principal, HttpServletRequest httpRequest,
+                                          HttpServletResponse respuesta) {
         String motivo = body != null ? body.get("motivo") : null;
-        atencionService.ponerEnEspera(id, principal.getUsuario(), motivo, IpUtil.obtenerIp(httpRequest));
-        return MessageResponse.of("El caso se puso en espera.");
+        AtencionService.CambioEstado cambio = atencionService.ponerEnEspera(id, principal.getUsuario(), motivo, IpUtil.obtenerIp(httpRequest));
+        return exitoCambioEstado(respuesta, cambio);
     }
 
     @PostMapping("/{id}/resolver")
     @PreAuthorize("hasRole('AGENTE')")
     public MessageResponse resolverCaso(@PathVariable Integer id, @Valid @RequestBody ResolverCasoRequest request,
-                                         @AuthenticationPrincipal CustomUserDetails principal, HttpServletRequest httpRequest) {
-        atencionService.resolverCaso(id, principal.getUsuario(), request.getDetalleResolucion(), IpUtil.obtenerIp(httpRequest));
-        return MessageResponse.of("El caso fue resuelto correctamente.");
+                                         @AuthenticationPrincipal CustomUserDetails principal, HttpServletRequest httpRequest,
+                                         HttpServletResponse respuesta) {
+        AtencionService.CambioEstado cambio = atencionService.resolverCaso(id, principal.getUsuario(), request.getDetalleResolucion(), IpUtil.obtenerIp(httpRequest));
+        String mensaje = Mensajes.resolucionRegistrada(cambio.numeroCaso());   // AN01 #4
+        Mensajes.enviar(respuesta, mensaje);
+        return MessageResponse.of(mensaje);
     }
 
     @PostMapping("/{id}/cerrar")
     @PreAuthorize("hasAnyRole('AGENTE','ADMINISTRADOR','SUPERVISOR')")
-    public MessageResponse cerrarCaso(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails principal, HttpServletRequest httpRequest) {
-        atencionService.cerrarCaso(id, principal.getUsuario(), IpUtil.obtenerIp(httpRequest));
-        return MessageResponse.of("El caso fue cerrado correctamente.");
+    public MessageResponse cerrarCaso(@PathVariable Integer id, @AuthenticationPrincipal CustomUserDetails principal,
+                                      HttpServletRequest httpRequest, HttpServletResponse respuesta) {
+        AtencionService.CambioEstado cambio = atencionService.cerrarCaso(id, principal.getUsuario(), IpUtil.obtenerIp(httpRequest));
+        String mensaje = Mensajes.casoCerrado(cambio.numeroCaso());   // AN01 #5
+        Mensajes.enviar(respuesta, mensaje);
+        return MessageResponse.of(mensaje);
+    }
+
+    /** AN01 #3: "Se actualizo el estado del caso X de A a B" (CU-07). */
+    private MessageResponse exitoCambioEstado(HttpServletResponse respuesta, AtencionService.CambioEstado cambio) {
+        String mensaje = Mensajes.estadoActualizado(cambio.numeroCaso(), cambio.estadoAnterior(), cambio.estadoNuevo());
+        Mensajes.enviar(respuesta, mensaje);
+        return MessageResponse.of(mensaje);
     }
 }

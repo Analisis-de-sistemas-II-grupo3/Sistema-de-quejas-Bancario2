@@ -9,6 +9,7 @@ import com.umg.quejasbancario.repository.BitacoraAccesoRepository;
 import com.umg.quejasbancario.repository.BitacoraCasoRepository;
 import com.umg.quejasbancario.repository.BitacoraCorreoRepository;
 import com.umg.quejasbancario.repository.BitacoraUsuarioRepository;
+import com.umg.quejasbancario.util.Mensajes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -106,6 +107,7 @@ public class BitacoraConsultaService {
     }
 
     private <T> Specification<T> fechaEntre(String campo, LocalDateTime desde, LocalDateTime hasta) {
+        Mensajes.validarRangoFechas(desde, hasta);   // AN02 #23
         return (root, query, cb) -> {
             if (desde == null && hasta == null) return null;
             if (desde != null && hasta != null) return cb.between(root.get(campo), desde, hasta);

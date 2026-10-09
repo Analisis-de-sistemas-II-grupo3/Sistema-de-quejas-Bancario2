@@ -2,6 +2,8 @@ package com.umg.quejasbancario.controller;
 
 import com.umg.quejasbancario.dto.response.BitacoraCasoResponse;
 import com.umg.quejasbancario.entity.Caso;
+import com.umg.quejasbancario.exception.BusinessRuleException;
+import com.umg.quejasbancario.util.Mensajes;
 import com.umg.quejasbancario.service.BitacoraConsultaService;
 import com.umg.quejasbancario.service.ReporteService;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +38,11 @@ public class ReporteController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime desde,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime hasta) {
 
+        Mensajes.validarRangoFechas(desde, hasta);   // AN02 #23
         List<Caso> casos = reporteService.obtenerCasosParaReporte(numeroCaso, idTipoCaso, estado, desde, hasta);
+        if (casos.isEmpty()) {
+            throw new BusinessRuleException(Mensajes.AN02_22);   // AN02 #22
+        }
 
         if ("pdf".equalsIgnoreCase(formato)) {
             return construirRespuesta(reporteService.reporteCasosPdf(casos), "reporte_casos.pdf", MediaType.APPLICATION_PDF);
@@ -53,7 +59,11 @@ public class ReporteController {
             @RequestParam(required = false) Integer idUsuario,
             @RequestParam(required = false) String numeroCaso) {
 
+        Mensajes.validarRangoFechas(desde, hasta);   // AN02 #23
         List<BitacoraCasoResponse> eventos = bitacoraConsultaService.consultarBitacoraCasos(desde, hasta, idUsuario, numeroCaso);
+        if (eventos.isEmpty()) {
+            throw new BusinessRuleException(Mensajes.AN02_22);   // AN02 #22
+        }
 
         if ("pdf".equalsIgnoreCase(formato)) {
             return construirRespuesta(reporteService.reporteAuditoriaPdf(eventos), "reporte_auditoria.pdf", MediaType.APPLICATION_PDF);

@@ -41,7 +41,8 @@ public class AuthService {
     private final NotificacionService notificacionService;
 
     /** 2.3.1 Iniciar Sesion. */
-    @Transactional
+    // noRollbackFor: el contador de intentos fallidos (RF03 / AN02 #12) debe persistirse aunque se lance la excepcion.
+    @Transactional(noRollbackFor = {BusinessRuleException.class, CuentaBloqueadaException.class})
     public LoginResponse iniciarSesion(LoginRequest request, String ip) {
         Usuario usuario = usuarioRepository.findByNombreUsuarioIgnoreCase(request.getNombreUsuario())
                 .orElseThrow(() -> new BusinessRuleException("Usuario o contraseña incorrectos."));

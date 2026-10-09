@@ -17,6 +17,8 @@ public class SolicitudReasignacionResponse {
     private String motivo;
     private String motivoRechazo;
     private String estado;
+    /** Agente que tiene el caso en este momento (tras aprobar: el nuevo agente). */
+    private String agenteActual;
     private LocalDateTime fechaSolicitud;
     private LocalDateTime fechaResolucion;
 }

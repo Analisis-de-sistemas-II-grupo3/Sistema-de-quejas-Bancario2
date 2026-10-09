@@ -10,6 +10,7 @@ import com.umg.quejasbancario.exception.AccesoDenegadoException;
 import com.umg.quejasbancario.exception.BusinessRuleException;
 import com.umg.quejasbancario.exception.ResourceNotFoundException;
 import com.umg.quejasbancario.repository.*;
+import com.umg.quejasbancario.util.Mensajes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
@@ -125,6 +126,7 @@ public class CasoService {
                                                   String nombreCliente, Integer idAgente,
                                                   LocalDateTime desde, LocalDateTime hasta,
                                                   Usuario usuarioAutenticado) {
+        Mensajes.validarRangoFechas(desde, hasta);   // AN02 #23
         EstadoCaso estadoEnum = null;
         if (estado != null && !estado.isBlank()) {
             estadoEnum = EstadoCaso.fromValor(estado);

@@ -8,6 +8,7 @@ import com.umg.quejasbancario.entity.*;
 import com.umg.quejasbancario.exception.BusinessRuleException;
 import com.umg.quejasbancario.exception.ResourceNotFoundException;
 import com.umg.quejasbancario.repository.*;
+import com.umg.quejasbancario.util.Mensajes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,7 +42,7 @@ public class CatalogoService {
     @Transactional
     public CatalogoItemResponse crearTipoCaso(TipoCasoRequest request, Usuario administrador, String ip) {
         if (tipoCasoRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new BusinessRuleException("Ya existe un tipo de caso con ese nombre.");
+            throw new BusinessRuleException(Mensajes.AN02_26);
         }
         TipoCaso tipoCaso = TipoCaso.builder().nombre(request.getNombre()).prefijo(request.getPrefijo().toUpperCase()).build();
         tipoCaso = tipoCasoRepository.save(tipoCaso);
@@ -72,7 +73,7 @@ public class CatalogoService {
     @Transactional
     public CatalogoItemResponse crearCategoria(CatalogoSimpleRequest request, Usuario administrador, String ip) {
         if (categoriaRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new BusinessRuleException("Ya existe una categoría con ese nombre.");
+            throw new BusinessRuleException(Mensajes.AN02_26);
         }
         Categoria categoria = categoriaRepository.save(Categoria.builder().nombre(request.getNombre()).build());
         registrarCambioCatalogo(administrador, ip, "Categoría", "creó", categoria.getNombre());
@@ -91,7 +92,7 @@ public class CatalogoService {
     @Transactional
     public CatalogoItemResponse crearProducto(CatalogoSimpleRequest request, Usuario administrador, String ip) {
         if (productoServicioRepository.existsByNombreIgnoreCase(request.getNombre())) {
-            throw new BusinessRuleException("Ya existe un producto/servicio con ese nombre.");
+            throw new BusinessRuleException(Mensajes.AN02_26);
         }
         ProductoServicio producto = productoServicioRepository.save(ProductoServicio.builder().nombre(request.getNombre()).build());
         registrarCambioCatalogo(administrador, ip, "Producto/Servicio", "creó", producto.getNombre());
@@ -119,13 +120,33 @@ public class CatalogoService {
         ParametroSistema parametro = parametroSistemaRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("El parámetro indicado no existe."));
         String valorAnterior = parametro.getValor();
-        parametro.setValor(request.getValor());
+        String valorNuevo = validarValorParametro(valorAnterior, request.getValor());
+        parametro.setValor(valorNuevo);
         parametro = parametroSistemaRepository.save(parametro);
 
         registrarCambioCatalogo(administrador, ip, "Parámetro del Sistema",
                 "cambió el valor de '" + parametro.getNombreParametro() + "' de '" + valorAnterior + "' a '" + request.getValor() + "' de",
                 "");
         return parametro;
+    }
+
+    /** AN02 #27: los parametros numericos deben recibir un numero entero mayor a cero. */
+    private String validarValorParametro(String valorActual, String valorNuevo) {
+        String nuevo = valorNuevo == null ? "" : valorNuevo.trim();
+        if (nuevo.isEmpty()) {
+            throw new BusinessRuleException(Mensajes.AN02_27);
+        }
+        boolean parametroNumerico = valorActual != null && valorActual.trim().matches("\\d+");
+        if (parametroNumerico) {
+            try {
+                if (Long.parseLong(nuevo) <= 0) {
+                    throw new BusinessRuleException(Mensajes.AN02_27);
+                }
+            } catch (NumberFormatException e) {
+                throw new BusinessRuleException(Mensajes.AN02_27);
+            }
+        }
+        return nuevo;
     }
 
     private void registrarCambioCatalogo(Usuario administrador, String ip, String tipoCatalogo, String accion, String nombre) {

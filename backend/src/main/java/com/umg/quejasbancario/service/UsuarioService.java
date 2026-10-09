@@ -13,6 +13,7 @@ import com.umg.quejasbancario.exception.ResourceNotFoundException;
 import com.umg.quejasbancario.repository.CasoRepository;
 import com.umg.quejasbancario.repository.RolRepository;
 import com.umg.quejasbancario.repository.UsuarioRepository;
+import com.umg.quejasbancario.util.Mensajes;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -44,7 +45,7 @@ public class UsuarioService {
     @Transactional
     public UsuarioResponse crear(CrearUsuarioRequest request, Usuario administrador, String ip) {
         if (usuarioRepository.existsByNombreUsuarioIgnoreCase(request.getNombreUsuario())) {
-            throw new BusinessRuleException("El nombre de usuario ingresado ya existe en el sistema.");
+            throw new BusinessRuleException(Mensajes.AN02_25);
         }
         if (usuarioRepository.existsByCorreoElectronicoIgnoreCase(request.getCorreoElectronico())) {
             throw new BusinessRuleException("El correo electrónico ingresado ya está registrado.");
@@ -111,7 +112,7 @@ public class UsuarioService {
             long casosActivos = casoRepository.contarCasosActivosPorAgente(usuario.getIdUsuario());
             if (casosActivos > 0) {
                 throw new BusinessRuleException(
-                        "No es posible inactivar al Agente porque tiene casos activos asignados. Reasigne sus casos antes de continuar.");
+                        Mensajes.AN02_24);
             }
         }
 
